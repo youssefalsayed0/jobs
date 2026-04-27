@@ -22,7 +22,7 @@ type JobCardProps = {
 export function JobCard({ job }: JobCardProps) {
   return (
     <Card className="overflow-hidden border-slate-200 bg-white shadow-sm transition hover:shadow-md">
-      <CardContent className="flex flex-col gap-4 p-5">
+      <CardContent className="flex flex-col gap-4">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">{job.title}</h3>
           <div className="mt-2 flex items-center gap-2 text-sm text-slate-600">
@@ -62,8 +62,8 @@ export function JobCard({ job }: JobCardProps) {
 
         <Button
           asChild
-          size="sm"
-          className="mt-auto w-full rounded-lg bg-blue-600 font-semibold text-white hover:bg-blue-700"
+          size="lg"
+          className="mt-auto w-full rounded-lg py-5 bg-blue-600 font-semibold text-white hover:bg-blue-700"
         >
           <Link to={`/jobs/${job.id}`}>Apply Now</Link>
         </Button>

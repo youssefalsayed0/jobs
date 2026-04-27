@@ -1,8 +1,9 @@
-import { Link, Route, Routes } from "react-router-dom"
+import { Route, Routes } from "react-router-dom"
 
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import { HomePage } from "@/pages/HomePage"
 import { LoginPage } from "@/pages/LoginPage"
+import { NotFoundPage } from "@/pages/NotFoundPage"
 import { SignupPage } from "@/pages/SignupPage"
 
 function App() {
@@ -25,19 +26,7 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="*"
-        element={
-          <div className="flex min-h-svh items-center justify-center p-4 text-slate-600">
-            <p>
-              Page not found.{" "}
-              <Link className="text-blue-600 hover:underline" to="/">
-                Go home
-              </Link>
-            </p>
-          </div>
-        }
-      />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
 }
