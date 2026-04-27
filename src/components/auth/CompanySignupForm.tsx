@@ -93,6 +93,7 @@ export function CompanySignupForm({ className }: CompanySignupFormProps) {
                 ? err.message
                 : "Something went wrong"
           form.setError("root", { message })
+          toast.error(message)
         }
       })}
     >
