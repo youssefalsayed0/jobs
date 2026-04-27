@@ -37,6 +37,12 @@ export async function apiRequest(
   const url = apiUrl(path)
   const headers = new Headers(init.headers)
 
+  // Free ngrok may return an HTML interstitial without CORS → bogus “CORS errors”.
+  // This header skips that page so the request reaches the API (e.g. Laravel).
+  if (!headers.has("ngrok-skip-browser-warning")) {
+    headers.set("ngrok-skip-browser-warning", "1")
+  }
+
   if (!headers.has("Accept")) {
     headers.set("Accept", "application/json")
   }

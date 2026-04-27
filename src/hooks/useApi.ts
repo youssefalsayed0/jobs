@@ -3,6 +3,9 @@ import { useMemo } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { apiRequest } from "@/lib/api/client"
 
+// apiRequest() always sets ngrok-skip-browser-warning so tunnel interstitials
+// don’t block browser traffic (login, this hook, and all other API calls).
+
 export function useApi() {
   const { token } = useAuth()
 
