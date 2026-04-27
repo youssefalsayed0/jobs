@@ -80,6 +80,7 @@ export function LoginForm({ className }: LoginFormProps) {
                 ? err.message
                 : "Something went wrong"
           form.setError("root", { message })
+          toast.error(message)
         }
       })}
     >

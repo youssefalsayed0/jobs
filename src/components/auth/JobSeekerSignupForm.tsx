@@ -86,6 +86,7 @@ export function JobSeekerSignupForm({ className }: JobSeekerSignupFormProps) {
                 ? err.message
                 : "Something went wrong"
           form.setError("root", { message })
+          toast.error(message)
         }
       })}
     >
