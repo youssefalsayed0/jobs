@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import heroIllustration from "@/assets/undraw_pedestrian-crossing_exov.svg";
+import heroIllustration from "@/assets/hero.jpg";
 
 const quickFilters = [
 	{ id: "remote", icon: CheckIcon, label: "Remote" },
@@ -31,20 +31,18 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
 
 	return (
 		<>
-			<section className="relative overflow-hidden bg-linear-to-b from-slate-100 via-slate-50 to-white px-4 pb-12 pt-8 min-h-[400px]">
-				<div className="absolute inset-0 flex items-center justify-end ">
+			<section className="relative overflow-hidden bg-white px-4  min-h-[400px]">
 					<HeroIllustration />
-				</div>
 				<div className="mx-auto container flex items-center justify-center min-h-[400px] relative z-10">
 					<div className=" w-full h-full  items-center  ">
 						<div>
-							<h1 className="text-4xl font-bold leading-tight tracking-tight text-slate-900 lg:text-5xl">Empowering Your Career Journey</h1>
-							<p className="mt-3 text-lg text-slate-600">Find Accessible Jobs That Match Your Skills</p>
+							<h1 className="text-4xl font-bold leading-tight tracking-tight text-blue-800 lg:text-5xl">Empowering Your Career Journey</h1>
+							<p className="mt-3 text-xl text-slate-700">Find Accessible Jobs That Match Your Skills</p>
 						</div>
 					</div>
 				</div>
 			</section>
-			<section className="bg-white px-4 py-12">
+			<section className=" px-4 py-12 bg-linear-to-b from-slate-100 via-slate-50 to-white">
 				<div className="container mx-auto">
 					<form onSubmit={handleSubmit} className="mt-10 rounded-2xl bg-white p-6 shadow-lg ring-1 ring-slate-900/5">
 						<div className="flex flex-col gap-3 sm:flex-row">
@@ -90,13 +88,11 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
 
 function HeroIllustration() {
 	return (
-		<div className="relative w-full max-w-lg">
+		<div className="absolute right-0 bottom-0 flex items-center justify-end ">
 			<img
 				src={heroIllustration}
 				alt="Inclusive career illustration"
-				className="mx-auto h-auto w-full max-h-[280px] object-contain object-bottom md:max-h-[500px]"
-				width={1134}
-				height={614}
+				className=" h-auto w-full md:w-[60%]"
 				loading="eager"
 				decoding="async"
 			/>

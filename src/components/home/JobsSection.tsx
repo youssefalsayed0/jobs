@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import { JobCard, type Job } from "./JobCard";
+import { Separator } from "../ui/separator";
 
 type JobsSectionProps = {
 	title: string;
@@ -18,6 +19,7 @@ export function JobsSection({ title, jobs, viewAllLink = "/jobs" }: JobsSectionP
 						View All Jobs
 					</Link>
 				</div>
+				<Separator className="mt-2" />
 
 				<div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
 					{jobs.map((job) => (
