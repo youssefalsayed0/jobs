@@ -62,7 +62,7 @@ export function HomePage() {
         userEmail={user?.email as string}
         onLogout={handleLogout}
       />
-
+ 
       <HeroSection onSearch={handleSearch} />
       <JobsSection title="Recommended Jobs" jobs={recommendedJobs} />
       <JobsSection title="More Opportunities" jobs={recommendedJobs} />
