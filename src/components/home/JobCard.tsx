@@ -17,7 +17,7 @@ export type Job = {
   location: string
   tags: string[]
   skills: string[]
-  /** ISO or API datetime for "posted" display */
+  /** Raw or ISO datetime from API; shown as relative “Posted … ago” when parseable. */
   createdAt?: string
 }
 
@@ -84,18 +84,19 @@ export function JobCard({ job }: JobCardProps) {
 
         {job.createdAt ? (
           (() => {
-            const absolute = formatJobDateTimeLong(job.createdAt)
             const relative = formatTimeAgo(job.createdAt)
-            if (!absolute && !relative) return null
+            const absolute =
+              formatJobDateTimeLong(job.createdAt) ?? job.createdAt.trim()
+            if (!relative && !absolute) return null
             return (
               <div className="space-y-1 border-t border-border/50 pt-3">
-                {absolute ? (
-                  <p className="text-xs leading-snug text-foreground/90">
+                <p className="text-xs font-medium leading-snug text-foreground/90">
+                  Posted {relative ?? absolute}
+                </p>
+                {relative && absolute ? (
+                  <p className="text-[0.6875rem] leading-snug text-muted-foreground">
                     {absolute}
                   </p>
-                ) : null}
-                {relative ? (
-                  <p className="text-xs text-muted-foreground">{relative}</p>
                 ) : null}
               </div>
             )

@@ -53,19 +53,19 @@ function FieldBlock({
 }
 
 function JobTimestampBlock({ iso }: { iso?: string }) {
-  const abs = formatJobDateTimeLong(iso)
-  const rel = formatTimeAgo(iso)
-  if (!abs && !rel) {
+  const trimmed = iso?.trim()
+  if (!trimmed) {
     return <span className="text-muted-foreground">—</span>
   }
+  // API may return ISO/SQL datetimes or pre-formatted strings (e.g. "May 12, 2026 at 12:19 AM EEST").
+  const abs = formatJobDateTimeLong(trimmed) ?? trimmed
+  const rel = formatTimeAgo(trimmed)
   return (
     <span className="flex flex-col gap-1">
-      {abs ? (
-        <span className="inline-flex items-start gap-2">
-          <CalendarIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-          <span>{abs}</span>
-        </span>
-      ) : null}
+      <span className="inline-flex items-start gap-2">
+        <CalendarIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+        <span>{abs}</span>
+      </span>
       {rel ? (
         <span className="pl-6 text-xs text-muted-foreground">{rel}</span>
       ) : null}

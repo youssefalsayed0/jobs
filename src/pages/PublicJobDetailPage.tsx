@@ -104,47 +104,60 @@ function PostedMeta({
   created_at?: string
   updated_at?: string
 }) {
-  const createdAbs = formatJobDateTimeLong(created_at)
+  const createdTrim = created_at?.trim()
+  const updatedTrim = updated_at?.trim()
+  const createdAbs =
+    formatJobDateTimeLong(created_at) ?? (createdTrim || undefined)
   const createdRel = formatTimeAgo(created_at)
-  const updatedAbs = formatJobDateTimeLong(updated_at)
+  const updatedAbs =
+    formatJobDateTimeLong(updated_at) ?? (updatedTrim || undefined)
   const updatedRel = formatTimeAgo(updated_at)
   const sameStamp =
-    created_at &&
-    updated_at &&
-    created_at.trim() === updated_at.trim()
-  if (
-    !createdAbs &&
-    !createdRel &&
-    !updatedAbs &&
-    !updatedRel
-  ) {
+    createdTrim &&
+    updatedTrim &&
+    createdTrim === updatedTrim
+  const hasPosted = createdRel || createdAbs
+  const hasUpdated = !sameStamp && (updatedRel || updatedAbs)
+  if (!hasPosted && !hasUpdated) {
     return null
   }
   return (
     <div className="flex flex-wrap gap-4 border-t border-border/50 pt-5 sm:gap-8">
-      {createdAbs || createdRel ? (
+      {hasPosted ? (
         <div className="min-w-0 space-y-1">
           <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             Posted
           </p>
-          {createdAbs ? (
+          {createdRel ? (
+            <p className="text-sm font-semibold text-foreground/95">
+              {createdRel}
+            </p>
+          ) : createdAbs ? (
             <p className="text-sm font-medium text-foreground/95">{createdAbs}</p>
           ) : null}
-          {createdRel ? (
-            <p className="text-xs text-muted-foreground">{createdRel}</p>
+          {createdRel && createdAbs ? (
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {createdAbs}
+            </p>
           ) : null}
         </div>
       ) : null}
-      {!sameStamp && (updatedAbs || updatedRel) ? (
+      {hasUpdated ? (
         <div className="min-w-0 space-y-1">
           <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             Updated
           </p>
-          {updatedAbs ? (
+          {updatedRel ? (
+            <p className="text-sm font-semibold text-foreground/95">
+              {updatedRel}
+            </p>
+          ) : updatedAbs ? (
             <p className="text-sm font-medium text-foreground/95">{updatedAbs}</p>
           ) : null}
-          {updatedRel ? (
-            <p className="text-xs text-muted-foreground">{updatedRel}</p>
+          {updatedRel && updatedAbs ? (
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {updatedAbs}
+            </p>
           ) : null}
         </div>
       ) : null}

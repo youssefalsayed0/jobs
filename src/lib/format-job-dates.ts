@@ -1,9 +1,42 @@
-/** Parse API datetime strings (ISO or common SQL shapes). */
+/**
+ * Parses API strings like `May 12, 2026 at 12:19 AM EEST` (month name, `at`, AM/PM, optional TZ).
+ * Time zone suffix is ignored; the instant follows the engine's parse of local calendar date + time.
+ */
+function parseEnglishMonthDateAtTime(trimmed: string): Date | null {
+  const m = trimmed.match(
+    /^([A-Za-z]{3,9}\s+\d{1,2},\s+\d{4})\s+at\s+(.+)$/i
+  )
+  if (!m) return null
+  const datePart = m[1]
+  const rest = m[2].trim()
+  const timeOnly = rest.match(
+    /^(\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM))/i
+  )
+  if (!timeOnly) return null
+  const combined = `${datePart} ${timeOnly[1]}`
+  const d = new Date(combined)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
+/** Parse API datetime strings (ISO, SQL `YYYY-MM-DD HH:…`, English `Mon D, YYYY at …`, etc.). */
 export function parseJobDate(iso: string | undefined): Date | null {
   if (!iso || typeof iso !== "string" || !iso.trim()) return null
-  const normalized = iso.includes("T") ? iso : iso.replace(" ", "T")
-  const d = new Date(normalized)
-  return Number.isNaN(d.getTime()) ? null : d
+  const trimmed = iso.trim()
+
+  const direct = new Date(trimmed)
+  if (!Number.isNaN(direct.getTime())) return direct
+
+  // SQL-style without `T` between date and time (only this shape gets a single-space → `T` fix).
+  if (/^\d{4}-\d{2}-\d{2} \d/.test(trimmed)) {
+    const normalized = trimmed.replace(" ", "T")
+    const d = new Date(normalized)
+    if (!Number.isNaN(d.getTime())) return d
+  }
+
+  const english = parseEnglishMonthDateAtTime(trimmed)
+  if (english) return english
+
+  return null
 }
 
 /**
