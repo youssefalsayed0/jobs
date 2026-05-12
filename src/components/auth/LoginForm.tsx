@@ -69,9 +69,19 @@ export function LoginForm({ className }: LoginFormProps) {
       className={cn("flex flex-col gap-4", className)}
       onSubmit={form.handleSubmit(async (values) => {
         try {
-          await login(values)
+          const signedIn = await login(values)
           toast.success("Signed in successfully")
-          navigate("/")
+          const role =
+            typeof signedIn.role === "string"
+              ? signedIn.role.toLowerCase()
+              : ""
+          navigate(
+            role === "company"
+              ? "/company/dashboard"
+              : role === "job_seeker"
+                ? "/seeker/dashboard"
+                : "/"
+          )
         } catch (err) {
           const message =
             err instanceof ApiError
@@ -147,7 +157,7 @@ export function LoginForm({ className }: LoginFormProps) {
       <div className="flex justify-end">
         <Link
           to="#"
-          className="text-sm font-medium text-blue-600 hover:underline"
+          className="text-sm font-medium text-primary hover:underline"
           onClick={(e) => e.preventDefault()}
         >
           Forgot Password?
@@ -157,7 +167,8 @@ export function LoginForm({ className }: LoginFormProps) {
       <Button
         type="submit"
         form="login-form"
-        className="h-12 w-full rounded-lg bg-[#2563eb] text-base font-semibold text-white hover:bg-[#1d4ed8]"
+        variant="default"
+        className="h-12 w-full rounded-lg text-base font-semibold"
         disabled={form.formState.isSubmitting}
       >
         Login
@@ -194,10 +205,7 @@ export function LoginForm({ className }: LoginFormProps) {
 
       <div className="flex flex-col items-center gap-3">
         <p className="text-sm text-slate-500">Don&apos;t have an account?</p>
-        <Button
-          asChild
-          className="h-12 w-full rounded-lg border-0 bg-[#22c55e] text-base font-semibold text-white hover:bg-[#16a34a]"
-        >
+        <Button asChild variant="secondary" className="h-12 w-full rounded-lg text-base font-semibold">
           <Link to="/signup">Sign Up Now</Link>
         </Button>
       </div>

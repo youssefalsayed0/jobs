@@ -36,7 +36,7 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
 				<div className="mx-auto container flex items-center justify-center min-h-[400px] relative z-10">
 					<div className=" w-full h-full  items-center  ">
 						<div>
-							<h1 className="text-4xl font-bold leading-tight tracking-tight text-blue-800 lg:text-5xl">Empowering Your Career Journey</h1>
+							<h1 className="text-4xl font-bold leading-tight tracking-tight text-primary lg:text-5xl">Empowering Your Career Journey</h1>
 							<p className="mt-3 text-xl text-slate-700">Find Accessible Jobs That Match Your Skills</p>
 						</div>
 					</div>
@@ -55,7 +55,7 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
 									className="h-12 border-slate-200 pl-12 text-base placeholder:text-slate-400"
 								/>
 							</div>
-							<Button type="submit" className="h-12 rounded-lg bg-blue-600 px-8 text-base font-semibold text-white hover:bg-blue-700">
+							<Button type="submit" variant="default" className="h-12 rounded-lg px-8 text-base font-semibold">
 								Search
 							</Button>
 						</div>
@@ -71,7 +71,7 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
 										onClick={() => toggleFilter(filter.id)}
 										className={cn(
 											"inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition",
-											active ? "border-blue-600 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-slate-50",
+											active ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted/50",
 										)}>
 										<Icon className="size-4" />
 										{filter.label}

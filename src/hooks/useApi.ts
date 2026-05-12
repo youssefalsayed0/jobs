@@ -29,6 +29,26 @@ export function useApi() {
 
       del: (path: string, opts?: { skipAuth?: boolean }) =>
         apiRequest(path, { method: "DELETE" }, { token, skipAuth: opts?.skipAuth }),
+
+      put: (path: string, body?: unknown, opts?: { skipAuth?: boolean }) =>
+        apiRequest(
+          path,
+          { method: "PUT", ...(body !== undefined ? { body } : {}) } as RequestInit,
+          { token, skipAuth: opts?.skipAuth }
+        ),
+
+      patch: (path: string, body?: unknown, opts?: { skipAuth?: boolean }) =>
+        apiRequest(
+          path,
+          { method: "PATCH", ...(body !== undefined ? { body } : {}) } as RequestInit,
+          { token, skipAuth: opts?.skipAuth }
+        ),
+
+      postForm: (path: string, form: FormData, opts?: { skipAuth?: boolean }) =>
+        apiRequest(path, { method: "POST", body: form }, { token, skipAuth: opts?.skipAuth }),
+
+      patchForm: (path: string, form: FormData, opts?: { skipAuth?: boolean }) =>
+        apiRequest(path, { method: "PATCH", body: form }, { token, skipAuth: opts?.skipAuth }),
     }),
     [token]
   )

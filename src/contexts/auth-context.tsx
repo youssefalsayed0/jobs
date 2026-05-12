@@ -52,8 +52,11 @@ type AuthContextValue = {
   user: AuthUser
   token: string | null
   isInitializing: boolean
-  login: (credentials: { email: string; password: string }) => Promise<void>
-  register: (body: RegisterBody) => Promise<void>
+  login: (credentials: {
+    email: string
+    password: string
+  }) => Promise<NonNullable<AuthUser>>
+  register: (body: RegisterBody) => Promise<NonNullable<AuthUser> | undefined>
   logout: () => void
   refreshUser: () => Promise<void>
 }
@@ -73,7 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setAuthToken(t)
     setToken(t)
-    setUser(normalizeUser(rawData))
+    const next = normalizeUser(rawData)
+    setUser(next)
+    if (!next) {
+      throw new Error("Invalid user payload")
+    }
+    return next
   }, [])
 
   const login = useCallback(
@@ -86,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!json || typeof json !== "object") {
         throw new Error("Invalid login response")
       }
-      applyAuthPayload(json as Record<string, unknown>)
+      return applyAuthPayload(json as Record<string, unknown>)
     },
     [applyAuthPayload]
   )
@@ -98,15 +106,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         { method: "POST", body } as unknown as RequestInit,
         { skipAuth: true }
       )
-      if (!json || typeof json !== "object") return
+      if (!json || typeof json !== "object") return undefined
       const payload = json as Record<string, unknown>
       if (
         typeof payload.token === "string" &&
         payload.data &&
         typeof payload.data === "object"
       ) {
-        applyAuthPayload(payload)
+        return applyAuthPayload(payload)
       }
+      return undefined
     },
     [applyAuthPayload]
   )

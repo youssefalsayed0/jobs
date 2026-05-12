@@ -1,8 +1,6 @@
 /**
- * Set in `.env`:
- * `REACT_APP_API_URL=https://your-api.example.com`
- * Paths in the app use `/api/...`; do not include `/api` in the base if your server
- * serves from the host root (e.g. base `https://api.example.com` + `/api/login`).
+ * Set in `.env`: `REACT_APP_API_URL=https://your-api.example.com`
+ * Do not include `/api` in the base if your API lives at the host root under `/api/...`.
  */
 export function getApiBaseUrl(): string {
   const raw = import.meta.env.REACT_APP_API_URL

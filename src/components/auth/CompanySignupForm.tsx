@@ -301,7 +301,7 @@ export function CompanySignupForm({ className }: CompanySignupFormProps) {
         Already have an account?{" "}
         <Link
           to="/login"
-          className="font-semibold text-blue-600 hover:underline"
+          className="font-semibold text-primary hover:underline"
         >
           Login
         </Link>

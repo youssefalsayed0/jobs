@@ -318,7 +318,8 @@ export function JobSeekerSignupForm({ className }: JobSeekerSignupFormProps) {
       <Button
         type="submit"
         form="job-seeker-signup-form"
-        className="mt-2 h-11 w-full rounded-lg bg-[#2563eb] text-base font-semibold text-white hover:bg-[#1d4ed8]"
+        className="mt-2 h-11 w-full rounded-lg text-base font-semibold"
+        variant="default"
         disabled={form.formState.isSubmitting}
       >
         Create Account
@@ -328,7 +329,7 @@ export function JobSeekerSignupForm({ className }: JobSeekerSignupFormProps) {
         Already have an account?{" "}
         <Link
           to="/login"
-          className="font-semibold text-blue-600 hover:underline"
+          className="font-semibold text-primary hover:underline"
         >
           Login
         </Link>
