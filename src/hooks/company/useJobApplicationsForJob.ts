@@ -6,14 +6,17 @@ import { ApiError } from "@/lib/api/client"
 import { parseJobApplications } from "@/lib/company-jobs-parse"
 import type { JobApplicationRow } from "@/types/company-jobs"
 
-export function useJobApplicationsForJob(jobId: string | null, open: boolean) {
+export function useJobApplicationsForJob(
+  jobId: string | null,
+  enabled: boolean
+) {
   const { get, patch } = useApi()
   const [rows, setRows] = useState<JobApplicationRow[]>([])
   const [loading, setLoading] = useState(false)
   const [updatingId, setUpdatingId] = useState<string | number | null>(null)
 
   useEffect(() => {
-    if (!open || !jobId) return
+    if (!enabled || !jobId) return
 
     let cancelled = false
     setLoading(true)
@@ -43,7 +46,7 @@ export function useJobApplicationsForJob(jobId: string | null, open: boolean) {
     return () => {
       cancelled = true
     }
-  }, [open, jobId, get])
+  }, [enabled, jobId, get])
 
   const updateStatus = useCallback(
     async (applicationId: string | number, status: string) => {

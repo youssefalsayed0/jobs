@@ -11,7 +11,7 @@ import type { ReactNode } from "react"
 import { useState } from "react"
 import { Link, useParams } from "react-router-dom"
 
-import { ApplicantsSheet } from "@/components/company-job-postings/applicants-sheet"
+import { JobPostingApplicationsSection } from "@/components/company-job-postings/JobPostingApplicationsSection"
 import { JobFormSheet } from "@/components/company-job-postings/job-form-sheet"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -77,7 +77,6 @@ export function CompanyJobDetailPage() {
   const { jobId } = useParams<{ jobId: string }>()
   const { job, loading, error, refetch } = useCompanyJobPostingDetail(jobId)
   const [formOpen, setFormOpen] = useState(false)
-  const [applicantsOpen, setApplicantsOpen] = useState(false)
 
   if (loading) {
     return (
@@ -143,14 +142,11 @@ export function CompanyJobDetailPage() {
             <PencilIcon data-icon="inline-start" className="size-4" />
             Edit
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-xl"
-            onClick={() => setApplicantsOpen(true)}
-          >
-            <UsersIcon data-icon="inline-start" className="size-4" />
-            Applicants
+          <Button type="button" variant="outline" className="rounded-xl" asChild>
+            <a href="#applications">
+              <UsersIcon data-icon="inline-start" className="size-4" />
+              Applicants
+            </a>
           </Button>
         </div>
       </div>
@@ -222,6 +218,10 @@ export function CompanyJobDetailPage() {
         </CardContent>
       </Card>
 
+      <JobPostingApplicationsSection
+        jobId={String(job.id)}
+        jobTitle={job.title ?? "Role"}
+      />
 
       <JobFormSheet
         open={formOpen}
@@ -233,12 +233,6 @@ export function CompanyJobDetailPage() {
         }}
       />
 
-      <ApplicantsSheet
-        open={applicantsOpen}
-        onOpenChange={setApplicantsOpen}
-        jobId={String(job.id)}
-        jobTitle={job.title ?? "Role"}
-      />
     </div>
   )
 }

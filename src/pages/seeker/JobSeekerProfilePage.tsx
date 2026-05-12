@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useCallback, useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { Link } from "react-router-dom"
+import { toast } from "sonner"
 import { z } from "zod"
 
 import {
@@ -10,6 +11,7 @@ import {
   AlertTitle,
 } from "@/components/ui/alert"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -44,20 +46,221 @@ import {
   SparklesIcon,
   UploadIcon,
   UserRoundIcon,
+  XIcon,
 } from "lucide-react"
+
+/** Laravel validates `skills` as an array; max 50 items. */
+const MAX_PROFILE_SKILLS = 50
+
+function parseSkillsTokens(raw: string | undefined): string[] {
+  if (!raw?.trim()) return []
+  return raw
+    .split(/[,;\n]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
+function joinSkillsTokens(tokens: string[]): string {
+  return tokens.join(", ")
+}
+
+function capSkillsTokens(tokens: string[]): string[] {
+  return tokens.slice(0, MAX_PROFILE_SKILLS)
+}
+
+/** Multipart: repeated `skills[]` so Laravel receives an array of strings. */
+function appendSkillsToFormData(fd: FormData, skillsRaw: string | undefined) {
+  const names = capSkillsTokens(parseSkillsTokens(skillsRaw))
+  for (const name of names) {
+    fd.append("skills[]", name)
+  }
+}
 
 const profileSchema = z.object({
   full_name: z.string().min(1, "Name is required"),
   phone: z.string().optional(),
   gender: z.string().optional(),
   city: z.string().optional(),
-  skills: z.string().optional(),
+  skills: z
+    .string()
+    .optional()
+    .superRefine((val, ctx) => {
+      if (parseSkillsTokens(val).length > MAX_PROFILE_SKILLS) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `You can add at most ${MAX_PROFILE_SKILLS} skills.`,
+        })
+      }
+    }),
   certificates: z.string().optional(),
   educations: z.string().optional(),
   experiences: z.string().optional(),
 })
 
 type ProfileForm = z.infer<typeof profileSchema>
+
+function skillsStringFromProfile(
+  profile: Record<string, unknown> | null
+): string {
+  if (!profile) return ""
+  const v = profile.skills
+  if (Array.isArray(v)) {
+    const rows = v
+      .filter((item): item is Record<string, unknown> =>
+        item !== null && typeof item === "object")
+      .map((item) => ({
+        order:
+          typeof item.sort_order === "number" ? item.sort_order : 0,
+        name: typeof item.name === "string" ? item.name.trim() : "",
+      }))
+      .filter((x) => x.name.length > 0)
+      .sort((a, b) => a.order - b.order)
+    return joinSkillsTokens(capSkillsTokens(rows.map((r) => r.name)))
+  }
+  if (typeof v === "string") {
+    return joinSkillsTokens(capSkillsTokens(parseSkillsTokens(v.trim())))
+  }
+  return ""
+}
+
+type SkillsTagsInputProps = {
+  id: string
+  value: string
+  onChange: (next: string) => void
+  onBlur: () => void
+  disabled?: boolean
+  invalid?: boolean
+  placeholder?: string
+}
+
+function SkillsTagsInput({
+  id,
+  value,
+  onChange,
+  onBlur,
+  disabled,
+  invalid,
+  placeholder = "Type a skill, press Enter or comma…",
+}: SkillsTagsInputProps) {
+  const [draft, setDraft] = useState("")
+  const tokens = parseSkillsTokens(value)
+  const tokenKey = tokens.join("\0")
+
+  useEffect(() => {
+    setDraft("")
+  }, [tokenKey])
+
+  const setTokens = useCallback(
+    (next: string[]) => {
+      const capped = capSkillsTokens(next)
+      if (next.length > capped.length) {
+        toast.warning(`Skills are limited to ${MAX_PROFILE_SKILLS} items.`)
+      }
+      onChange(joinSkillsTokens(capped))
+    },
+    [onChange]
+  )
+
+  const commitDraft = useCallback(() => {
+    const raw = draft.trim()
+    if (!raw) return
+    const parts = raw
+      .split(/[,;\n]+/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+    if (parts.length === 0) return
+    const merged = [...tokens]
+    for (const p of parts) {
+      if (!merged.some((t) => t.toLowerCase() === p.toLowerCase())) {
+        merged.push(p)
+      }
+    }
+    setTokens(merged)
+    setDraft("")
+  }, [draft, setTokens, tokens])
+
+  const removeAt = useCallback(
+    (idx: number) => {
+      setTokens(tokens.filter((_, i) => i !== idx))
+    },
+    [setTokens, tokens]
+  )
+
+  return (
+    <div
+      className={cn(
+        "flex min-h-11 w-full flex-wrap items-center gap-1.5 rounded-xl border bg-background px-2 py-1.5 shadow-sm transition-[color,box-shadow]",
+        "focus-within:border-ring/60 focus-within:ring-[3px] focus-within:ring-ring/50",
+        invalid ? "border-destructive" : "border-border/80",
+        disabled && "pointer-events-none opacity-60"
+      )}
+    >
+      {tokens.map((name, idx) => (
+        <Badge
+          key={`${name}-${idx}`}
+          variant="secondary"
+          asChild
+          className="h-7 max-w-full gap-0.5 rounded-md border border-border/50 bg-muted/80 py-0 pr-0.5 pl-2 text-xs font-medium shadow-none"
+        >
+          <span className="inline-flex items-center gap-0.5">
+            <span className="truncate">{name}</span>
+            <button
+              type="button"
+              className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background/80 hover:text-foreground"
+              aria-label={`Remove ${name}`}
+              disabled={disabled}
+              onClick={() => removeAt(idx)}
+            >
+              <XIcon className="size-3.5" />
+            </button>
+          </span>
+        </Badge>
+      ))}
+      <Input
+        id={id}
+        className="h-8 min-w-[10ch] flex-1 border-0 bg-transparent px-1 shadow-none focus-visible:ring-0 md:min-w-[14ch]"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (tokens.length >= MAX_PROFILE_SKILLS) {
+            if (e.key === "Enter" || e.key === ",") {
+              e.preventDefault()
+              toast.warning(
+                `You can add at most ${MAX_PROFILE_SKILLS} skills. Remove one to add another.`
+              )
+            }
+            return
+          }
+          if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault()
+            commitDraft()
+            return
+          }
+          if (
+            e.key === "Backspace" &&
+            draft === "" &&
+            tokens.length > 0
+          ) {
+            e.preventDefault()
+            removeAt(tokens.length - 1)
+          }
+        }}
+        onBlur={() => {
+          commitDraft()
+          onBlur()
+        }}
+        disabled={disabled}
+        placeholder={
+          tokens.length >= MAX_PROFILE_SKILLS
+            ? `Max ${MAX_PROFILE_SKILLS} — remove a tag to add more`
+            : tokens.length === 0
+              ? placeholder
+              : "Add more…"
+        }
+      />
+    </div>
+  )
+}
 
 function readText(
   p: Record<string, unknown> | null,
@@ -96,7 +299,7 @@ function defaultsFromProfile(
     phone: readText(profile, "phone", "mobile"),
     gender: readText(profile, "gender"),
     city: readText(profile, "city", "location"),
-    skills: readText(profile, "skills"),
+    skills: skillsStringFromProfile(profile),
     certificates: readText(profile, "certificates", "certificate"),
     educations: readText(profile, "educations", "education"),
     experiences: readText(profile, "experiences", "experience"),
@@ -222,7 +425,7 @@ export function JobSeekerProfilePage() {
             if (values.phone?.trim()) fd.append("phone", values.phone.trim())
             if (values.gender?.trim()) fd.append("gender", values.gender.trim())
             if (values.city?.trim()) fd.append("city", values.city.trim())
-            if (values.skills?.trim()) fd.append("skills", values.skills.trim())
+            appendSkillsToFormData(fd, values.skills)
             if (values.certificates?.trim())
               fd.append("certificates", values.certificates.trim())
             if (values.educations?.trim())
@@ -395,15 +598,18 @@ export function JobSeekerProfilePage() {
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel htmlFor="profile-skills">Skills</FieldLabel>
                       <FieldContent>
-                        <Textarea
+                        <SkillsTagsInput
                           id="profile-skills"
-                          rows={4}
-                          className="min-h-30 resize-y rounded-xl border-border/80"
-                          placeholder="e.g. React, TypeScript, REST APIs — comma separated or one per line"
-                          {...field}
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          disabled={form.formState.isSubmitting}
+                          invalid={fieldState.invalid}
+                          placeholder="e.g. React — Enter or comma to add each skill"
                         />
                         <FieldDescription>
-                          Prioritize what matches the roles you want next.
+                          Up to {MAX_PROFILE_SKILLS} skills. Tags and the server
+                          both use a list (not a single comma string).
                         </FieldDescription>
                         {fieldState.invalid ? (
                           <FieldError errors={[fieldState.error]} />

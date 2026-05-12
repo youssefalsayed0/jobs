@@ -13,7 +13,6 @@ import { useEffect, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
 
-import { ApplicantsSheet } from "@/components/company-job-postings/applicants-sheet"
 import { JobFormSheet } from "@/components/company-job-postings/job-form-sheet"
 import {
   AlertDialog,
@@ -81,9 +80,6 @@ export function CompanyJobsPanel() {
   const [formOpen, setFormOpen] = useState(false)
   const [formMode, setFormMode] = useState<"create" | "edit">("create")
   const [editJobId, setEditJobId] = useState<string | null>(null)
-  const [applicantsOpen, setApplicantsOpen] = useState(false)
-  const [applicantsJobId, setApplicantsJobId] = useState<string | null>(null)
-  const [applicantsTitle, setApplicantsTitle] = useState("")
   const [deleteTarget, setDeleteTarget] = useState<CompanyJobPosting | null>(
     null
   )
@@ -100,33 +96,17 @@ export function CompanyJobsPanel() {
     setFormOpen(true)
   }
 
-  const openApplicants = (job: CompanyJobPosting) => {
-    setApplicantsJobId(String(job.id))
-    setApplicantsTitle(job.title ?? "Role")
-    setApplicantsOpen(true)
-  }
-
   useEffect(() => {
     const edit = searchParams.get("edit")
-    const applicants = searchParams.get("applicants")
-    if (!edit && !applicants) return
+    if (!edit) return
 
     const next = new URLSearchParams(searchParams)
-    if (edit) {
-      setFormMode("edit")
-      setEditJobId(edit)
-      setFormOpen(true)
-      next.delete("edit")
-    }
-    if (applicants) {
-      const j = jobs.find((x) => String(x.id) === applicants)
-      setApplicantsJobId(applicants)
-      setApplicantsTitle(j?.title ?? "Role")
-      setApplicantsOpen(true)
-      next.delete("applicants")
-    }
+    setFormMode("edit")
+    setEditJobId(edit)
+    setFormOpen(true)
+    next.delete("edit")
     setSearchParams(next, { replace: true })
-  }, [searchParams, setSearchParams, jobs])
+  }, [searchParams, setSearchParams])
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-8 md:gap-10">
@@ -239,10 +219,7 @@ export function CompanyJobsPanel() {
               <p className="text-sm font-medium text-foreground">
                 {jobs.length} open position{jobs.length === 1 ? "" : "s"}
               </p>
-              <p className="text-xs text-muted-foreground sm:text-sm">
-                Three per row on large screens. Open a card to see the full API
-                payload on the job page.
-              </p>
+       
             </div>
             <ul className="grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-2 xl:grid-cols-3">
               {jobs.map((job) => {
@@ -314,10 +291,14 @@ export function CompanyJobsPanel() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="rounded-lg py-2"
-                                  onClick={() => openApplicants(job)}
+                                  asChild
                                 >
-                                  <UsersIcon data-icon="inline-start" />
-                                  Applicants
+                                  <Link
+                                    to={`/company/jobs/${encodeURIComponent(String(job.id))}#applications`}
+                                  >
+                                    <UsersIcon data-icon="inline-start" />
+                                    Applicants
+                                  </Link>
                                 </DropdownMenuItem>
                               </DropdownMenuGroup>
                               <DropdownMenuSeparator />
@@ -395,13 +376,6 @@ export function CompanyJobsPanel() {
         onSaved={() => {
           void refetch()
         }}
-      />
-
-      <ApplicantsSheet
-        open={applicantsOpen}
-        onOpenChange={setApplicantsOpen}
-        jobId={applicantsJobId}
-        jobTitle={applicantsTitle}
       />
 
       <AlertDialog

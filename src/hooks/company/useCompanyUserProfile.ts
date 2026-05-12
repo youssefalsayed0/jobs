@@ -8,7 +8,7 @@ export type CompanyProfilePayload = Record<string, unknown> | null
 
 export function useCompanyUserProfile() {
   const { request } = useApi()
-  const [data, setData] = useState<CompanyProfilePayload>(null)
+  const [profile, setProfile] = useState<CompanyProfilePayload>(null)
   const [loading, setLoading] = useState(true)
 
   const refetch = useCallback(async () => {
@@ -18,13 +18,13 @@ export function useCompanyUserProfile() {
       if (json && typeof json === "object") {
         const o = json as Record<string, unknown>
         const inner = o.data
-        setData(
+        setProfile(
           inner && typeof inner === "object"
             ? (inner as Record<string, unknown>)
             : o
         )
       } else {
-        setData(null)
+        setProfile(null)
       }
     } catch (err) {
       const message =
@@ -34,7 +34,7 @@ export function useCompanyUserProfile() {
             ? err.message
             : "Failed to load profile"
       toast.error(message)
-      setData(null)
+      setProfile(null)
     } finally {
       setLoading(false)
     }
@@ -44,5 +44,5 @@ export function useCompanyUserProfile() {
     void refetch()
   }, [refetch])
 
-  return { data, loading, refetch }
+  return { profile, loading, refetch }
 }
