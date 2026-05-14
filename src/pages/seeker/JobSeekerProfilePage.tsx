@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { z } from "zod";
@@ -434,6 +434,17 @@ export function JobSeekerProfilePage() {
 
 	const disabilityTypeWatch = form.watch("disabilityType");
 
+	const profileSelectSyncKey = useMemo(() => {
+		const d = defaultsFromProfile(profile);
+		const stamp =
+			profile && typeof profile.updated_at === "string"
+				? profile.updated_at
+				: profile && (typeof profile.id === "number" || typeof profile.id === "string")
+					? String(profile.id)
+					: "0";
+		return `${stamp}|${d.gender}|${d.disabilityType}|${d.disabilityCustom}`;
+	}, [profile]);
+
 	const certArray = useFieldArray({ control: form.control, name: "certificates" });
 	const eduArray = useFieldArray({ control: form.control, name: "educations" });
 	const expArray = useFieldArray({ control: form.control, name: "experiences" });
@@ -447,6 +458,18 @@ export function JobSeekerProfilePage() {
 		const next = defaultsFromProfile(profile);
 		if (!next.email.trim() && typeof user?.email === "string") {
 			next.email = user.email;
+		}
+		const u = user && typeof user === "object" ? (user as Record<string, unknown>) : null;
+		if (!(next.gender ?? "").trim() && u) {
+			const g = normalizeGenderForProfileForm(readStringCoerced(u, "gender", "sex"));
+			if (g) next.gender = g;
+		}
+		if (!(next.disabilityType ?? "").trim() && !(next.disabilityCustom ?? "").trim() && u) {
+			const d = disabilityFormFromProfile(u);
+			if (d.disabilityType || d.disabilityCustom) {
+				next.disabilityType = d.disabilityType;
+				next.disabilityCustom = d.disabilityCustom;
+			}
 		}
 		form.reset(next);
 		const cvEl = document.getElementById("profile-cv") as HTMLInputElement | null;
@@ -577,7 +600,7 @@ export function JobSeekerProfilePage() {
 						}
 
 						try {
-							await saveProfile(fd);
+							const fresh = await saveProfile(fd);
 							try {
 								await refreshUser();
 							} catch {
@@ -591,7 +614,11 @@ export function JobSeekerProfilePage() {
 							});
 							setPendingPhoto(false);
 							if (photoInput) photoInput.value = "";
-							form.reset(values);
+							if (fresh) {
+								form.reset(defaultsFromProfile(fresh));
+							} else {
+								form.reset(values);
+							}
 						} catch {
 							/* toast in hook */
 						}
@@ -666,7 +693,10 @@ export function JobSeekerProfilePage() {
 											<Field data-invalid={fieldState.invalid}>
 												<FieldLabel htmlFor="profile-gender">Gender</FieldLabel>
 												<FieldContent>
-													<Select onValueChange={field.onChange} value={field.value || undefined}>
+													<Select
+														key={`gender-${profileSelectSyncKey}`}
+														onValueChange={field.onChange}
+														value={field.value || undefined}>
 														<SelectTrigger id="profile-gender" aria-invalid={fieldState.invalid} className="h-11 w-full rounded-xl border-border/80">
 															<SelectValue placeholder="Select gender" />
 														</SelectTrigger>
@@ -706,6 +736,7 @@ export function JobSeekerProfilePage() {
 											<FieldLabel htmlFor="profile-disability-type">Disability type</FieldLabel>
 											<FieldContent>
 												<Select
+													key={`disability-${profileSelectSyncKey}`}
 													onValueChange={(v) => {
 														field.onChange(v);
 														if (v !== JOB_SEEKER_DISABILITY_CUSTOM) {
