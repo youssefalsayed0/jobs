@@ -1,9 +1,10 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 
 import { CompaniesSection } from "@/components/home/CompaniesSection"
 import { HeroSection } from "@/components/home/HeroSection"
 import { JobsSection } from "@/components/home/JobsSection"
 import { Spinner } from "@/components/ui/spinner"
+import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import {
   usePublicCompanies,
   type UsePublicCompaniesParams,
@@ -18,7 +19,12 @@ const HOME_FEATURED_COMPANIES_QUERY = {
 } satisfies UsePublicCompaniesParams
 
 export function HomePage() {
-  const { jobs, loading } = usePublicJobPostings()
+  const [heroSearch, setHeroSearch] = useState("")
+  const debouncedHeroSearch = useDebouncedValue(heroSearch.trim(), 450)
+  const { jobs, loading } = usePublicJobPostings({
+    page: 1,
+    search: debouncedHeroSearch,
+  })
   const { companies: featuredRows, loading: companiesLoading } =
     usePublicCompanies(HOME_FEATURED_COMPANIES_QUERY)
   const jobCards = useMemo(() => jobs.map(mapPostingToJobCard), [jobs])
@@ -29,13 +35,12 @@ export function HomePage() {
   const firstSlice = jobCards.slice(0, 6)
   const secondSlice = jobCards.slice(6, 12)
 
-  const handleSearch = (query: string, filters: string[]) => {
-    console.info("Search", { query, filters })
-  }
-
   return (
     <div className="flex flex-1 flex-col bg-muted/40">
-      <HeroSection onSearch={handleSearch} />
+      <HeroSection
+        searchQuery={heroSearch}
+        onSearchQueryChange={setHeroSearch}
+      />
       {loading ? (
         <div className="flex justify-center bg-card py-20">
           <Spinner className="size-10 text-primary" />

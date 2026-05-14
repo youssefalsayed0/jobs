@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicJobPostings } from "@/hooks/job-seeker/usePublicJobPostings"
+import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { mapPostingToJobCard } from "@/lib/map-public-job-card"
 import { visiblePageRange } from "@/lib/visible-page-range"
 import { cn } from "@/lib/utils"
@@ -55,6 +56,7 @@ function JobsGridSkeleton() {
 
 export function JobsListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const searchFromUrl = searchParams.get("search") ?? ""
   const page = useMemo(() => {
     const raw = searchParams.get("page")
     const n = Number.parseInt(raw ?? "1", 10)
@@ -79,9 +81,34 @@ export function JobsListPage() {
     [setSearchParams]
   )
 
-  const { jobs, loading, meta } = usePublicJobPostings(page)
+  const { jobs, loading, meta } = usePublicJobPostings({
+    page,
+    search: searchFromUrl.trim(),
+  })
   const cards = useMemo(() => jobs.map(mapPostingToJobCard), [jobs])
-  const [query, setQuery] = useState("")
+
+  const [inputValue, setInputValue] = useState(searchFromUrl)
+  useEffect(() => {
+    setInputValue(searchFromUrl)
+  }, [searchFromUrl])
+
+  const debouncedInput = useDebouncedValue(inputValue.trim(), 450)
+
+  const urlSearchRaw = searchParams.get("search") ?? ""
+  useEffect(() => {
+    const current = urlSearchRaw.trim()
+    if (debouncedInput === current) return
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (debouncedInput) next.set("search", debouncedInput)
+        else next.delete("search")
+        next.delete("page")
+        return next
+      },
+      { replace: true }
+    )
+  }, [debouncedInput, urlSearchRaw, setSearchParams])
 
   useEffect(() => {
     if (loading || !meta) return
@@ -99,23 +126,11 @@ export function JobsListPage() {
     }
   }, [loading, meta, page, setSearchParams])
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return cards
-    return cards.filter(
-      (j) =>
-        j.title.toLowerCase().includes(q) ||
-        j.company.toLowerCase().includes(q) ||
-        j.location.toLowerCase().includes(q) ||
-        j.tags.some((t) => t.toLowerCase().includes(q)) ||
-        j.skills.some((s) => s.toLowerCase().includes(q))
-    )
-  }, [cards, query])
-
   const totalListings = meta?.total ?? 0
+  const searchActive = searchFromUrl.trim().length > 0
+  const showingCatalogEmpty = !loading && totalListings === 0 && !searchActive
+  const showingSearchEmpty = !loading && totalListings === 0 && searchActive
   const hasListings = totalListings > 0
-  const showingEmpty = !loading && !hasListings
-  const noMatches = !loading && hasListings && filtered.length === 0
   const lastPage = Math.max(1, meta?.last_page ?? 1)
   const pageItems = visiblePageRange(page, lastPage)
 
@@ -138,8 +153,8 @@ export function JobsListPage() {
                 Browse jobs
               </h1>
               <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Discover listings on Opportix. Search filters the current page;
-                use pagination to explore more roles.
+                Search runs on the server after you pause typing (about half a
+                second). Results update below; use pagination for more roles.
               </p>
             </div>
 
@@ -147,12 +162,10 @@ export function JobsListPage() {
               <div className="flex w-full shrink-0 flex-col gap-1 rounded-2xl border border-border/60 bg-muted/25 px-5 py-4 sm:w-auto sm:min-w-[240px]">
                 <span className="flex items-center gap-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                   <BriefcaseIcon className="size-3.5 text-primary" />
-                  {query.trim() ? "Matches (this page)" : "Showing"}
+                  {searchActive ? "Search results" : "Showing"}
                 </span>
                 <p className="text-2xl font-bold tabular-nums tracking-tight text-foreground">
-                  {query.trim() ? (
-                    filtered.length
-                  ) : meta.from != null && meta.to != null ? (
+                  {meta.from != null && meta.to != null ? (
                     <>
                       {meta.from}
                       <span className="text-muted-foreground">–</span>
@@ -166,46 +179,48 @@ export function JobsListPage() {
                   </span>
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {query.trim()
-                    ? `${cards.length} jobs on page ${meta.current_page}`
-                    : lastPage > 1
-                      ? `Page ${meta.current_page} of ${lastPage}`
-                      : "All listings on one page"}
+                  {searchActive ? (
+                    <>
+                      Query: &ldquo;{searchFromUrl.trim()}&rdquo;
+                      {lastPage > 1
+                        ? ` · Page ${meta.current_page} of ${lastPage}`
+                        : null}
+                    </>
+                  ) : lastPage > 1 ? (
+                    `Page ${meta.current_page} of ${lastPage}`
+                  ) : (
+                    "All listings on one page"
+                  )}
                 </p>
               </div>
             ) : null}
           </div>
 
-          {!loading && hasListings ? (
-            <div className="relative mt-8 max-w-xl">
-              <SearchIcon
-                className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-                aria-hidden
-              />
-              <Input
-                type="search"
-                placeholder="Search title, company, location…"
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value)
-                  if (page !== 1) goToPage(1)
-                }}
-                className={cn(
-                  "h-11 rounded-xl border-border/80 bg-background/80 pl-10 shadow-sm",
-                  "placeholder:text-muted-foreground/70"
-                )}
-                autoComplete="off"
-                spellCheck={false}
-              />
-            </div>
-          ) : null}
+          <div className="relative mt-8 max-w-xl">
+            <SearchIcon
+              className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
+            <Input
+              type="search"
+              placeholder="Search title, company, location…"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className={cn(
+                "h-11 rounded-xl border-border/80 bg-background/80 pl-10 shadow-sm",
+                "placeholder:text-muted-foreground/70"
+              )}
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </div>
         </div>
       </header>
 
       <div className="container mx-auto w-full flex-1 px-4 py-8 sm:px-8 sm:py-10 lg:py-12">
         {loading ? (
           <JobsGridSkeleton />
-        ) : showingEmpty ? (
+        ) : showingCatalogEmpty ? (
           <Card className="mx-auto max-w-lg rounded-3xl border-dashed border-border/80 bg-muted/10 py-14 shadow-none">
             <CardContent className="px-6">
               <Empty className="min-h-0 border-0 p-0">
@@ -227,7 +242,7 @@ export function JobsListPage() {
               </Empty>
             </CardContent>
           </Card>
-        ) : noMatches ? (
+        ) : showingSearchEmpty ? (
           <Card className="mx-auto max-w-lg rounded-3xl border-border/70 bg-card/95 py-12 shadow-sm">
             <CardContent className="space-y-4 px-6 text-center">
               <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-muted">
@@ -238,15 +253,15 @@ export function JobsListPage() {
                   No matches
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Nothing fits &ldquo;{query.trim()}&rdquo; on this page. Try
-                  another keyword or go to a different page.
+                  No jobs matched &ldquo;{searchFromUrl.trim()}&rdquo;. Try a
+                  different keyword.
                 </p>
               </div>
               <Button
                 type="button"
                 variant="secondary"
                 className="rounded-xl"
-                onClick={() => setQuery("")}
+                onClick={() => setInputValue("")}
               >
                 Clear search
               </Button>
@@ -255,7 +270,7 @@ export function JobsListPage() {
         ) : (
           <>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-              {filtered.map((job) => (
+              {cards.map((job) => (
                 <JobCard key={job.id} job={job} />
               ))}
             </div>

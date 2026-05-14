@@ -22,17 +22,41 @@ function defaultMetaFromRowCount(rowCount: number): JobPostingsPaginationMeta {
   }
 }
 
-export function usePublicJobPostings(page = 1) {
+export type UsePublicJobPostingsParams = {
+  page?: number
+  search?: string
+}
+
+function normalizeJobPostingsRequest(
+  pageOrParams: number | UsePublicJobPostingsParams = 1,
+): { page: number; search: string } {
+  if (typeof pageOrParams === "number") {
+    return { page: Math.max(1, pageOrParams), search: "" }
+  }
+  return {
+    page: Math.max(1, pageOrParams.page ?? 1),
+    search: (pageOrParams.search ?? "").trim(),
+  }
+}
+
+export function usePublicJobPostings(
+  pageOrParams: number | UsePublicJobPostingsParams = 1,
+) {
   const { get } = useApi()
   const [jobs, setJobs] = useState<CompanyJobPosting[]>([])
   const [meta, setMeta] = useState<JobPostingsPaginationMeta | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const { page, search } = normalizeJobPostingsRequest(pageOrParams)
 
   const refetch = useCallback(async () => {
     setLoading(true)
     try {
       const safePage = Math.max(1, page)
       const qs = new URLSearchParams({ page: String(safePage) })
+      if (search) {
+        qs.set("search", search)
+      }
       const json = await get(`/api/job-postings?${qs.toString()}`, {
         skipAuth: true,
       })
@@ -55,7 +79,7 @@ export function usePublicJobPostings(page = 1) {
     } finally {
       setLoading(false)
     }
-  }, [get, page])
+  }, [get, page, search])
 
   useEffect(() => {
     const id = window.setTimeout(() => {
