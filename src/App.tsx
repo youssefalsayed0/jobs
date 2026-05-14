@@ -18,6 +18,7 @@ import { LoginPage } from "@/pages/LoginPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PublicJobDetailPage } from "@/pages/PublicJobDetailPage";
 import { SignupPage } from "@/pages/SignupPage";
+import { SubscriptionPlansPage } from "@/pages/SubscriptionPlansPage";
 import { JobSeekerDashboardLayout } from "@/layouts/JobSeekerDashboardLayout";
 import { JobSeekerApplicationsPage } from "@/pages/seeker/JobSeekerApplicationsPage";
 import { JobSeekerDashboardHome } from "@/pages/seeker/JobSeekerDashboardHome";
@@ -34,6 +35,7 @@ function App() {
 					<Route path="companies" element={<CompaniesPage />} />
 					<Route path="companies/:companyId" element={<CompanyPublicDetailPage />} />
 					<Route path="about" element={<AboutPage />} />
+					<Route path="plans" element={<SubscriptionPlansPage />} />
 					<Route
 						path="seeker"
 						element={

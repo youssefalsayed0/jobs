@@ -1,6 +1,9 @@
 export type ApplicationJobSnippet = {
   title?: string
   company_name?: string
+  /** Employer company id for public profile link `/companies/:id`. */
+  company_id?: number | string
+  company_profile_photo_url?: string | null
   description?: string
   requirements?: string
   qualification?: string

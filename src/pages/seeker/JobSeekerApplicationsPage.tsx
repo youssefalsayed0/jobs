@@ -35,11 +35,44 @@ function ApplicationCard({ row }: { row: JobSeekerApplicationRow }) {
   const title =
     job?.title?.trim() || `Application #${String(row.id)}`
   const company = job?.company_name?.trim() ?? "—"
+  const companyId = job?.company_id
+  const companyLogo =
+    typeof job?.company_profile_photo_url === "string" &&
+    job.company_profile_photo_url.trim() !== ""
+      ? job.company_profile_photo_url.trim()
+      : null
+  const companyHref =
+    companyId !== undefined && companyId !== ""
+      ? `/companies/${encodeURIComponent(String(companyId))}`
+      : null
   const jobId = row.job_posting_id
   const jobHref =
     jobId !== undefined && jobId !== ""
       ? `/jobs/${encodeURIComponent(String(jobId))}`
       : null
+
+  const companyNameEl = companyHref ? (
+    <Link
+      to={companyHref}
+      className="truncate font-medium text-foreground/85 underline-offset-4 hover:text-primary hover:underline"
+    >
+      {company}
+    </Link>
+  ) : (
+    <span className="truncate font-medium text-foreground/85">{company}</span>
+  )
+
+  const logoBlock = companyLogo ? (
+    <img
+      src={companyLogo}
+      alt=""
+      className="size-11 shrink-0 rounded-xl border border-border/60 bg-background object-contain p-0.5"
+    />
+  ) : (
+    <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <Building2Icon className="size-5" aria-hidden />
+    </div>
+  )
 
   return (
     <li className="h-full">
@@ -62,15 +95,24 @@ function ApplicationCard({ row }: { row: JobSeekerApplicationRow }) {
             <h2 className="line-clamp-2 text-base font-semibold leading-snug tracking-tight text-foreground sm:text-lg">
               {title}
             </h2>
-            <p className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
-              <Building2Icon
-                className="size-4 shrink-0 text-primary/75"
-                aria-hidden
-              />
-              <span className="truncate font-medium text-foreground/85">
-                {company}
-              </span>
-            </p>
+            <div className="flex min-w-0 items-center gap-3 text-sm text-muted-foreground">
+              {companyHref ? (
+                <Link
+                  to={companyHref}
+                  className="shrink-0 outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {logoBlock}
+                </Link>
+              ) : (
+                logoBlock
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Company
+                </p>
+                <p className="flex min-w-0 items-center gap-2">{companyNameEl}</p>
+              </div>
+            </div>
           </div>
         </CardHeader>
         {row.submitted_at ? (
@@ -114,7 +156,13 @@ function ApplicationsGridSkeleton() {
             <CardHeader className="space-y-3">
               <Skeleton className="h-5 w-16 rounded-full" />
               <Skeleton className="h-5 w-full" />
-              <Skeleton className="h-4 w-4/5 max-w-48" />
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-11 shrink-0 rounded-xl" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-4 w-4/5 max-w-48" />
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="pb-2">
               <Skeleton className="h-3 w-full" />

@@ -6,11 +6,47 @@ import type {
 } from "@/types/job-seeker-application"
 
 function parseJobSnippet(o: Record<string, unknown>): ApplicationJobSnippet {
+  let companyId: number | string | undefined
+  let profilePhoto: string | undefined
+
+  const nested = o.company
+  if (nested && typeof nested === "object" && !Array.isArray(nested)) {
+    const c = nested as Record<string, unknown>
+    if (typeof c.id === "number" || typeof c.id === "string") {
+      companyId = c.id
+    }
+    const pu = c.profile_photo_url
+    if (typeof pu === "string" && pu.trim() !== "") {
+      profilePhoto = pu.trim()
+    }
+  }
+
+  const flatCid = o.company_id
+  if (
+    companyId === undefined &&
+    (typeof flatCid === "number" || typeof flatCid === "string")
+  ) {
+    companyId = flatCid
+  }
+
+  const flatPhoto = o.company_profile_photo_url
+  if (
+    !profilePhoto &&
+    typeof flatPhoto === "string" &&
+    flatPhoto.trim() !== ""
+  ) {
+    profilePhoto = flatPhoto.trim()
+  }
+
   return {
     title: typeof o.title === "string" ? o.title : undefined,
     company_name: stripCompanyNameUpdatedSuffix(
       typeof o.company_name === "string" ? o.company_name : undefined
     ),
+    ...(companyId !== undefined ? { company_id: companyId } : {}),
+    ...(profilePhoto !== undefined
+      ? { company_profile_photo_url: profilePhoto }
+      : {}),
     description:
       typeof o.description === "string" ? o.description : undefined,
     requirements:
