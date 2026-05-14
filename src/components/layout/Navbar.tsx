@@ -1,24 +1,36 @@
-import { Link, NavLink } from "react-router-dom";
-import { BriefcaseIcon } from "lucide-react";
+import { Link, NavLink } from "react-router-dom"
+import { BriefcaseIcon, MenuIcon } from "lucide-react"
 
-import { UserNavMenu } from "@/components/layout/UserNavMenu";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { UserNavMenu } from "@/components/layout/UserNavMenu"
+import { Button } from "@/components/ui/button"
+import {
+	Sheet,
+	SheetClose,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+	SheetTrigger,
+} from "@/components/ui/sheet"
+import { cn } from "@/lib/utils"
 
 const navLinks = [
 	{ to: "/jobs", label: "Jobs" },
 	{ to: "/companies", label: "Companies" },
 	{ to: "/plans", label: "Plans" },
 	{ to: "/about", label: "About" },
-] as const;
+] as const
+
+const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
+	cn("text-muted-foreground transition hover:text-foreground", isActive && "font-semibold text-foreground")
 
 type NavbarProps = {
-	isLoggedIn?: boolean;
-	userAvatar?: string;
-	userName?: string;
-	userEmail?: string;
-	onLogout?: () => void;
-};
+	isLoggedIn?: boolean
+	userAvatar?: string
+	userName?: string
+	userEmail?: string
+	onLogout?: () => void
+}
 
 export function Navbar({ isLoggedIn = false, userAvatar, userName, userEmail, onLogout }: NavbarProps) {
 	return (
@@ -36,13 +48,14 @@ export function Navbar({ isLoggedIn = false, userAvatar, userName, userEmail, on
 
 				<nav className="hidden items-center gap-7 text-sm font-medium md:flex">
 					{navLinks.map((item) => (
-						<NavLink key={item.to} to={item.to} className={({ isActive }) => cn("text-muted-foreground transition hover:text-foreground", isActive && "font-semibold text-foreground")}>
+						<NavLink key={item.to} to={item.to} className={navLinkClassName}>
 							{item.label}
 						</NavLink>
 					))}
 				</nav>
 
-				<div className="flex items-center gap-3">
+				<div className="flex items-center gap-2 md:gap-3">
+				
 					{isLoggedIn ? (
 						<UserNavMenu userName={userName} userEmail={userEmail} userAvatar={userAvatar} onLogout={onLogout} />
 					) : (
@@ -50,8 +63,38 @@ export function Navbar({ isLoggedIn = false, userAvatar, userName, userEmail, on
 							<Link to="/login">Login</Link>
 						</Button>
 					)}
+						<Sheet>
+						<SheetTrigger asChild>
+							<Button type="button" variant="outline" size="icon" className="shrink-0 md:hidden" aria-label="Open menu">
+								<MenuIcon />
+							</Button>
+						</SheetTrigger>
+						<SheetContent side="right" className="flex w-full flex-col gap-0 sm:max-w-sm">
+							<SheetHeader className="text-left">
+								<SheetTitle>Menu</SheetTitle>
+								<SheetDescription className="sr-only">Main site navigation</SheetDescription>
+							</SheetHeader>
+							<nav className="flex flex-col gap-1 px-4 pb-4">
+								{navLinks.map((item) => (
+									<SheetClose key={item.to} asChild>
+										<NavLink
+											to={item.to}
+											className={({ isActive }) =>
+												cn(
+													"rounded-lg px-3 py-3 text-base font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground",
+													isActive && "bg-accent font-semibold text-foreground",
+												)
+											}>
+											{item.label}
+										</NavLink>
+									</SheetClose>
+								))}
+							</nav>
+						</SheetContent>
+					</Sheet>
+
 				</div>
 			</div>
 		</header>
-	);
+	)
 }
