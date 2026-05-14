@@ -6,6 +6,26 @@ import { ApiError } from "@/lib/api/client"
 
 export type JobSeekerProfilePayload = Record<string, unknown> | null
 
+/**
+ * GET `/api/user` shape differs by environment: flat user, `{ user: {…} }`,
+ * or JSON:API-style `{ attributes: {…} }`. Merge so profile fields resolve
+ * the same as on local.
+ */
+function flattenJobSeekerProfilePayload(
+  inner: Record<string, unknown>
+): Record<string, unknown> {
+  const attrs = inner.attributes
+  const withAttrs =
+    attrs && typeof attrs === "object" && !Array.isArray(attrs)
+      ? { ...inner, ...(attrs as Record<string, unknown>) }
+      : { ...inner }
+  const u = withAttrs.user
+  if (u && typeof u === "object" && !Array.isArray(u)) {
+    return { ...(u as Record<string, unknown>), ...withAttrs }
+  }
+  return withAttrs
+}
+
 export function useJobSeekerProfile() {
   const { request, patchForm } = useApi()
   const [profile, setProfile] = useState<JobSeekerProfilePayload>(null)
@@ -20,7 +40,7 @@ export function useJobSeekerProfile() {
         const inner = o.data
         setProfile(
           inner && typeof inner === "object"
-            ? (inner as Record<string, unknown>)
+            ? flattenJobSeekerProfilePayload(inner as Record<string, unknown>)
             : o
         )
       } else {

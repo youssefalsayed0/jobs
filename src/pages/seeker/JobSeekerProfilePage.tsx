@@ -204,17 +204,42 @@ function parseRowArray(v: unknown, map: (item: unknown) => unknown): unknown[] {
 	return v.map(map);
 }
 
+/** Trim BOM / ZWSP and compatibility-normalize strings from APIs (esp. production). */
+function normalizeApiString(s: string): string {
+	return s
+		.replace(/^\uFEFF/, "")
+		.replace(/\u200B/g, "")
+		.normalize("NFKC")
+		.trim();
+}
+
+function rawToDisabilityInputString(raw: unknown): string {
+	if (raw === null || raw === undefined) return "";
+	if (typeof raw === "string") return normalizeApiString(raw);
+	if (typeof raw === "number" && Number.isFinite(raw)) return String(raw);
+	if (typeof raw === "object" && !Array.isArray(raw)) {
+		const o = raw as Record<string, unknown>;
+		const n = o.name ?? o.label ?? o.title ?? o.value;
+		if (typeof n === "string") return normalizeApiString(n);
+		if (typeof n === "number" && Number.isFinite(n)) return String(n);
+	}
+	return "";
+}
+
 function disabilityFormFromProfile(profile: Record<string, unknown> | null): { disabilityType: string; disabilityCustom: string } {
 	if (!profile) return { disabilityType: "", disabilityCustom: "" };
-	const raw = profile.disability_type;
+	const raw = profile.disability_type ?? profile.disabilityType;
 	if (raw === null || raw === undefined) {
 		return { disabilityType: "", disabilityCustom: "" };
 	}
-	const s = typeof raw === "string" ? raw.trim() : String(raw).trim();
+	const s = rawToDisabilityInputString(raw);
 	if (!s) return { disabilityType: "", disabilityCustom: "" };
+	const lower = s.toLowerCase();
+	const byValueCi = JOB_SEEKER_DISABILITY_OPTIONS.find((o) => o.value.toLowerCase() === lower);
+	if (byValueCi) return { disabilityType: byValueCi.value, disabilityCustom: "" };
 	const optionValues = new Set(JOB_SEEKER_DISABILITY_OPTIONS.map((o) => o.value));
 	if (optionValues.has(s)) return { disabilityType: s, disabilityCustom: "" };
-	const byLabel = JOB_SEEKER_DISABILITY_OPTIONS.find((o) => o.label.toLowerCase() === s.toLowerCase());
+	const byLabel = JOB_SEEKER_DISABILITY_OPTIONS.find((o) => o.label.toLowerCase() === lower);
 	if (byLabel) return { disabilityType: byLabel.value, disabilityCustom: "" };
 	return {
 		disabilityType: JOB_SEEKER_DISABILITY_CUSTOM,
@@ -318,10 +343,27 @@ function readText(p: Record<string, unknown> | null, ...keys: string[]): string 
 	return "";
 }
 
+/** Scalar string from API: supports numeric enums / wrapped values in production. */
+function readStringCoerced(p: Record<string, unknown> | null, ...keys: string[]): string {
+	if (!p) return "";
+	for (const k of keys) {
+		const v = p[k];
+		if (typeof v === "string") {
+			const t = normalizeApiString(v);
+			if (t !== "") return t;
+		}
+		if (typeof v === "number" && Number.isFinite(v)) {
+			return String(Math.trunc(v));
+		}
+	}
+	return "";
+}
+
 /** Map API / legacy values to form: only `male` or `female`, else empty. */
 function normalizeGenderForProfileForm(raw: string | undefined): string {
-	const t = (raw ?? "").trim().toLowerCase();
-	if (t === "male" || t === "female") return t;
+	const t = normalizeApiString(raw ?? "").toLowerCase();
+	if (t === "male" || t === "m" || t === "man") return "male";
+	if (t === "female" || t === "f" || t === "woman") return "female";
 	return "";
 }
 
@@ -349,7 +391,7 @@ function defaultsFromProfile(profile: Record<string, unknown> | null): ProfileFo
 		full_name: readText(profile, "full_name", "name") || combined,
 		email: readText(profile, "email"),
 		phone: readText(profile, "phone", "mobile"),
-		gender: normalizeGenderForProfileForm(readText(profile, "gender")),
+		gender: normalizeGenderForProfileForm(readStringCoerced(profile, "gender", "sex")),
 		city: readText(profile, "city", "location"),
 		disabilityType,
 		disabilityCustom,
@@ -670,7 +712,7 @@ export function JobSeekerProfilePage() {
 															form.setValue("disabilityCustom", "");
 														}
 													}}
-													value={field.value}>
+													value={field.value ? field.value : undefined}>
 													<SelectTrigger id="profile-disability-type" aria-invalid={fieldState.invalid} className="h-11 w-full rounded-xl border-border/80">
 														<SelectValue placeholder="Select an option" />
 													</SelectTrigger>
