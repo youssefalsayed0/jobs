@@ -23,6 +23,7 @@ import { JobSeekerDashboardLayout } from "@/layouts/JobSeekerDashboardLayout";
 import { JobSeekerApplicationsPage } from "@/pages/seeker/JobSeekerApplicationsPage";
 import { JobSeekerDashboardHome } from "@/pages/seeker/JobSeekerDashboardHome";
 import { JobSeekerProfilePage } from "@/pages/seeker/JobSeekerProfilePage";
+import { JobSeekerSubscriptionPage } from "@/pages/seeker/JobSeekerSubscriptionPage";
 
 function App() {
 	return (
@@ -47,6 +48,7 @@ function App() {
 						<Route index element={<Navigate to="dashboard" replace />} />
 						<Route path="dashboard" element={<JobSeekerDashboardHome />} />
 						<Route path="profile" element={<JobSeekerProfilePage />} />
+						<Route path="subscription" element={<JobSeekerSubscriptionPage />} />
 						<Route path="applications" element={<JobSeekerApplicationsPage />} />
 					</Route>
 					<Route

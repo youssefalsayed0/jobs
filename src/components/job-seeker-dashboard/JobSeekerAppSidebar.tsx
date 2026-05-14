@@ -5,6 +5,7 @@ import {
 	LayoutDashboardIcon,
 	LogOutIcon,
 	ScrollText,
+	SparklesIcon,
 	UserIcon,
 } from "lucide-react"
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom"
@@ -40,6 +41,11 @@ const seekerNav = [
 		icon: LayoutDashboardIcon,
 	},
 	{ to: "/seeker/profile", label: "Profile", icon: UserIcon },
+	{
+		to: "/seeker/subscription",
+		label: "Subscription",
+		icon: SparklesIcon,
+	},
 	{
 		to: "/seeker/applications",
 		label: "Applications",
