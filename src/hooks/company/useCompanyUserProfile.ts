@@ -7,7 +7,7 @@ import { ApiError } from "@/lib/api/client"
 export type CompanyProfilePayload = Record<string, unknown> | null
 
 export function useCompanyUserProfile() {
-  const { request } = useApi()
+  const { request, patchForm } = useApi()
   const [profile, setProfile] = useState<CompanyProfilePayload>(null)
   const [loading, setLoading] = useState(true)
 
@@ -44,5 +44,25 @@ export function useCompanyUserProfile() {
     void refetch()
   }, [refetch])
 
-  return { profile, loading, refetch }
+  const saveProfile = useCallback(
+    async (form: FormData) => {
+      try {
+        await patchForm("/api/company/profile", form)
+        toast.success("Profile updated")
+        await refetch()
+      } catch (err) {
+        const message =
+          err instanceof ApiError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "Could not update profile"
+        toast.error(message)
+        throw err
+      }
+    },
+    [patchForm, refetch]
+  )
+
+  return { profile, loading, refetch, saveProfile }
 }

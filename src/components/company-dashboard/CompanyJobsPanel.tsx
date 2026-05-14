@@ -14,6 +14,7 @@ import { Link, useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
 
 import { JobFormSheet } from "@/components/company-job-postings/job-form-sheet"
+import { ApprovedDisabilitiesBadges } from "@/components/job-postings/ApprovedDisabilitiesBadges"
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -331,6 +332,18 @@ export function CompanyJobsPanel() {
                             </span>
                           ) : null}
                         </div>
+                        {job.approved_disability &&
+                        job.approved_disability.length > 0 ? (
+                          <div className="space-y-1">
+                            <p className="text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
+                              Welcoming
+                            </p>
+                            <ApprovedDisabilitiesBadges
+                              items={job.approved_disability}
+                              maxVisible={5}
+                            />
+                          </div>
+                        ) : null}
                         {job.description ? (
                           <CardDescription className="line-clamp-3 text-sm leading-relaxed">
                             {job.description}

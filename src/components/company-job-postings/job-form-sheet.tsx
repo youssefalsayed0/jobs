@@ -9,6 +9,8 @@ import { useJobPostingSave } from "@/hooks/company/useJobPostingSave"
 import { Button } from "@/components/ui/button"
 import {
   Field,
+  FieldContent,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -33,7 +35,12 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
+import { SkillsTagsInput } from "@/components/job-seeker/SkillsTagsInput"
 import { ApiError } from "@/lib/api/client"
+import {
+  APPROVED_DISABILITY_SUGGESTIONS,
+  MAX_APPROVED_DISABILITY_TAGS,
+} from "@/lib/job-approved-disability"
 import {
   type JobPostingFormValues,
   jobPostingFormDefaults,
@@ -257,6 +264,39 @@ export function JobFormSheet({
                     {fieldState.invalid ? (
                       <FieldError errors={[fieldState.error]} />
                     ) : null}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="approved_disability"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="job-approved-disability">
+                      Disabilities we welcome
+                    </FieldLabel>
+                    <FieldContent>
+                      <SkillsTagsInput
+                        id="job-approved-disability"
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        disabled={form.formState.isSubmitting}
+                        invalid={fieldState.invalid}
+                        maxTags={MAX_APPROVED_DISABILITY_TAGS}
+                        limitEntityLabel="disability entries"
+                        suggestions={APPROVED_DISABILITY_SUGGESTIONS}
+                        placeholder="Type a condition, Enter or comma — or use Quick add"
+                      />
+                      <FieldDescription>
+                        Up to {MAX_APPROVED_DISABILITY_TAGS} tags. Shown to candidates
+                        as accommodations you explicitly support for this role.
+                      </FieldDescription>
+                      {fieldState.invalid ? (
+                        <FieldError errors={[fieldState.error]} />
+                      ) : null}
+                    </FieldContent>
                   </Field>
                 )}
               />

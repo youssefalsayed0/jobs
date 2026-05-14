@@ -1,7 +1,23 @@
 import { useCallback } from "react"
 
 import { useApi } from "@/hooks/useApi"
+import { approvedDisabilityTokensFromFormString } from "@/lib/job-approved-disability"
+import type { CompanyJobPostingInput } from "@/types/company-jobs"
 import type { JobPostingFormValues } from "@/lib/validations/company-job"
+
+function toApiPayload(values: JobPostingFormValues): CompanyJobPostingInput {
+  return {
+    title: values.title.trim(),
+    description: values.description.trim(),
+    requirements: values.requirements.trim(),
+    qualification: values.qualification.trim(),
+    location: values.location.trim(),
+    type: values.type,
+    approved_disability: approvedDisabilityTokensFromFormString(
+      values.approved_disability
+    ),
+  }
+}
 
 export function useJobPostingSave() {
   const { post, put } = useApi()
@@ -12,12 +28,13 @@ export function useJobPostingSave() {
       jobId: string | null,
       values: JobPostingFormValues
     ) => {
+      const body = toApiPayload(values)
       if (mode === "create") {
-        await post("/api/company/job-postings", values)
+        await post("/api/company/job-postings", body)
         return
       }
       if (jobId) {
-        await put(`/api/company/job-postings/${jobId}`, values)
+        await put(`/api/company/job-postings/${jobId}`, body)
       }
     },
     [post, put]

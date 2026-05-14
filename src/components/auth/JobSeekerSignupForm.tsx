@@ -1,14 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { CloudUploadIcon, Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
+import { SkillsTagsInput } from "@/components/job-seeker/SkillsTagsInput"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -23,19 +25,15 @@ import {
 } from "@/components/ui/select"
 import { ApiError } from "@/lib/api/client"
 import {
+  JOB_SEEKER_DISABILITY_CUSTOM,
+  JOB_SEEKER_DISABILITY_OPTIONS,
+} from "@/lib/disability-types"
+import { capSkillsTokens, parseSkillsTokens } from "@/lib/skills-tags"
+import {
   type JobSeekerSignupValues,
   jobSeekerSignupSchema,
 } from "@/lib/validations/auth"
 import { cn } from "@/lib/utils"
-
-const skills = [
-  { value: "react", label: "React" },
-  { value: "typescript", label: "TypeScript" },
-  { value: "node", label: "Node.js" },
-  { value: "python", label: "Python" },
-  { value: "design", label: "UI/UX Design" },
-  { value: "data", label: "Data analysis" },
-] as const
 
 type JobSeekerSignupFormProps = {
   className?: string
@@ -55,10 +53,13 @@ export function JobSeekerSignupForm({ className }: JobSeekerSignupFormProps) {
       phone: "",
       password: "",
       confirmPassword: "",
-      skillPrimary: "",
-      skillSecondary: "",
+      skills: "",
+      disabilityType: "",
+      disabilityCustom: "",
     },
   })
+
+  const disabilityType = form.watch("disabilityType")
 
   return (
     <form
@@ -66,6 +67,12 @@ export function JobSeekerSignupForm({ className }: JobSeekerSignupFormProps) {
       className={cn("flex flex-col gap-4 overflow-hidden", className)}
       onSubmit={form.handleSubmit(async (values) => {
         try {
+          const skills = capSkillsTokens(parseSkillsTokens(values.skills))
+          const disability_type =
+            values.disabilityType === JOB_SEEKER_DISABILITY_CUSTOM
+              ? (values.disabilityCustom ?? "").trim()
+              : values.disabilityType
+
           await registerUser({
             email: values.email,
             password: values.password,
@@ -73,7 +80,8 @@ export function JobSeekerSignupForm({ className }: JobSeekerSignupFormProps) {
             role: "job_seeker",
             full_name: values.fullName,
             phone: values.phone,
-            skills: [values.skillPrimary, values.skillSecondary].filter(Boolean),
+            skills,
+            disability_type,
           })
           logout()
           toast.success("Account created. Sign in to continue.")
@@ -225,94 +233,86 @@ export function JobSeekerSignupForm({ className }: JobSeekerSignupFormProps) {
           )}
         />
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Controller
-            name="skillPrimary"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid} className="min-w-0">
-                <FieldLabel htmlFor="job-seeker-signup-form-skillPrimary">Skills</FieldLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger
-                    id="job-seeker-signup-form-skillPrimary"
-                    aria-invalid={fieldState.invalid}
-                    className="h-11 w-full min-w-0 rounded-md border-slate-200 bg-slate-50"
-                  >
-                    <SelectValue placeholder="Select skill" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {skills.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>
-                        {s.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-              </Field>
-            )}
-          />
-          <Controller
-            name="skillSecondary"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid} className="min-w-0">
-                <FieldLabel htmlFor="job-seeker-signup-form-skillSecondary">Skills</FieldLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger
-                    id="job-seeker-signup-form-skillSecondary"
-                    aria-invalid={fieldState.invalid}
-                    className="h-11 w-full min-w-0 rounded-md border-slate-200 bg-slate-50"
-                  >
-                    <SelectValue placeholder="Select skill" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {skills.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>
-                        {s.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-              </Field>
-            )}
-          />
-        </div>
-
         <Controller
-          name="cv"
+          name="skills"
           control={form.control}
-          render={({ field: { onChange, onBlur, name, ref }, fieldState }) => (
+          render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <label
-                className={cn(
-                  "flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 bg-sky-50/80 px-4 py-4 transition hover:bg-sky-100/60"
-                )}
-              >
-                <CloudUploadIcon className="size-6 text-sky-600" />
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-slate-800">
-                    Upload CV <span className="font-normal text-slate-500">(PDF, DOCX)</span>
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    Upload your resume in PDF or DOCX format
-                  </span>
-                </div>
-                <Input
-                  ref={ref}
-                  name={name}
-                  type="file"
-                  accept=".pdf,.doc,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                  className="sr-only"
-                  onBlur={onBlur}
-                  onChange={(e) => onChange(e.target.files)}
-                />
-              </label>
+              <FieldLabel htmlFor="job-seeker-signup-form-skills">Skills</FieldLabel>
+              <SkillsTagsInput
+                id="job-seeker-signup-form-skills"
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                invalid={fieldState.invalid}
+                placeholder="e.g. PHP — press Enter or comma for each skill"
+              />
+              <FieldDescription>
+                Add one or more skills as tags (same as your profile).
+              </FieldDescription>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
         />
+
+        <Controller
+          name="disabilityType"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="job-seeker-signup-form-disabilityType">
+                Disability type
+              </FieldLabel>
+              <Select
+                onValueChange={(v) => {
+                  field.onChange(v)
+                  if (v !== JOB_SEEKER_DISABILITY_CUSTOM) {
+                    form.setValue("disabilityCustom", "")
+                  }
+                }}
+                value={field.value}
+              >
+                <SelectTrigger
+                  id="job-seeker-signup-form-disabilityType"
+                  aria-invalid={fieldState.invalid}
+                  className="h-11 w-full rounded-md border-slate-200 bg-slate-50"
+                >
+                  <SelectValue placeholder="Select an option" />
+                </SelectTrigger>
+                <SelectContent>
+                  {JOB_SEEKER_DISABILITY_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        {disabilityType === JOB_SEEKER_DISABILITY_CUSTOM ? (
+          <Controller
+            name="disabilityCustom"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="job-seeker-signup-form-disabilityCustom">
+                  Describe disability type
+                </FieldLabel>
+                <Input
+                  {...field}
+                  id="job-seeker-signup-form-disabilityCustom"
+                  placeholder="e.g. Low vision, wheelchair user…"
+                  aria-invalid={fieldState.invalid}
+                  className="h-11 rounded-md border-slate-200 bg-slate-50 placeholder:text-slate-400"
+                />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+        ) : null}
       </FieldGroup>
 
       <Button

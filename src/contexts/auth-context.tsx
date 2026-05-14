@@ -41,11 +41,13 @@ type RegisterBody = {
   password_confirmation: string
   role: string
   full_name?: string
-  phone?: string
+  phone?: string | null
   skills?: string[]
+  disability_type?: string
   company_name?: string
   industry?: string
   company_size?: string
+  disability_support_policy?: string | null
 }
 
 type AuthContextValue = {

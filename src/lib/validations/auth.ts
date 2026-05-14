@@ -1,5 +1,8 @@
 import { z } from "zod"
 
+import { JOB_SEEKER_DISABILITY_CUSTOM } from "@/lib/disability-types"
+import { MAX_SKILLS_TAGS, parseSkillsTokens } from "@/lib/skills-tags"
+
 const passwordRules = z
   .string()
   .min(8, { message: "Password must be at least 8 characters" })
@@ -21,38 +24,56 @@ export const jobSeekerSignupSchema = z
     phone: phoneRules,
     password: passwordRules,
     confirmPassword: z.string().min(1, { message: "Confirm your password" }),
-    skillPrimary: z.string().min(1, { message: "Select a skill" }),
-    skillSecondary: z.string().min(1, { message: "Select a skill" }),
-    cv: z
-      .custom<FileList | undefined>(
-        (val) => val === undefined || val instanceof FileList
-      )
-      .refine(
-        (files) => {
-          if (!files || files.length === 0) return false
-          const f = files[0]
-          const ok = [".pdf", ".doc", ".docx"].some((ext) =>
-            f.name.toLowerCase().endsWith(ext)
-          )
-          return ok
-        },
-        { message: "Upload a PDF or DOCX file" }
-      ),
+    skills: z
+      .string()
+      .optional()
+      .superRefine((val, ctx) => {
+        const t = parseSkillsTokens(val)
+        if (t.length < 1) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Add at least one skill.",
+          })
+        }
+        if (t.length > MAX_SKILLS_TAGS) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `You can add at most ${MAX_SKILLS_TAGS} skills.`,
+          })
+        }
+      }),
+    disabilityType: z
+      .string()
+      .min(1, { message: "Select a disability type" }),
+    disabilityCustom: z.string().optional(),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
+  })
+  .superRefine((d, ctx) => {
+    if (d.disabilityType === JOB_SEEKER_DISABILITY_CUSTOM) {
+      const c = d.disabilityCustom?.trim() ?? ""
+      if (c.length < 1) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Enter your disability type.",
+          path: ["disabilityCustom"],
+        })
+      }
+    }
   })
 
 export const companySignupSchema = z
   .object({
     companyName: z.string().min(2, { message: "Company name is required" }),
     email: z.string().min(1, { message: "Email is required" }).email(),
-    phone: phoneRules,
+    phone: z.string().optional(),
     password: passwordRules,
     confirmPassword: z.string().min(1, { message: "Confirm your password" }),
     industry: z.string().min(1, { message: "Select an industry" }),
     companySize: z.string().min(1, { message: "Select company size" }),
+    disabilitySupportPolicy: z.string().optional(),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: "Passwords do not match",

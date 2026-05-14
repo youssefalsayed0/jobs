@@ -13,6 +13,7 @@ import { Link, useParams } from "react-router-dom"
 
 import { JobPostingApplicationsSection } from "@/components/company-job-postings/JobPostingApplicationsSection"
 import { JobFormSheet } from "@/components/company-job-postings/job-form-sheet"
+import { ApprovedDisabilitiesBadges } from "@/components/job-postings/ApprovedDisabilitiesBadges"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -132,6 +133,14 @@ export function CompanyJobDetailPage() {
               {job.location}
             </p>
           ) : null}
+          {job.approved_disability && job.approved_disability.length > 0 ? (
+            <div className="space-y-2 pt-1">
+              <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                Disabilities we welcome
+              </p>
+              <ApprovedDisabilitiesBadges items={job.approved_disability} />
+            </div>
+          ) : null}
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
           <Button
@@ -174,6 +183,15 @@ export function CompanyJobDetailPage() {
             {job.type ? formatLabel(job.type) : "—"}
           </FieldBlock>
           <FieldBlock label="Location">{job.location ?? "—"}</FieldBlock>
+          <div className="sm:col-span-2 xl:col-span-3">
+            <FieldBlock label="Disabilities we welcome">
+              {job.approved_disability && job.approved_disability.length > 0 ? (
+                <ApprovedDisabilitiesBadges items={job.approved_disability} />
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              )}
+            </FieldBlock>
+          </div>
           <div className="sm:col-span-2 xl:col-span-3">
             <FieldBlock label="Description">
               {job.description ?? (

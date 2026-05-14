@@ -1,5 +1,9 @@
 import { z } from "zod"
 
+import {
+  approvedDisabilityTokensFromFormString,
+  MAX_APPROVED_DISABILITY_TAGS,
+} from "@/lib/job-approved-disability"
 import type { CompanyJobPosting } from "@/types/company-jobs"
 
 export const jobPostingFormSchema = z.object({
@@ -9,6 +13,18 @@ export const jobPostingFormSchema = z.object({
   qualification: z.string().min(1, "Qualifications are required"),
   location: z.string().min(1, "Location is required"),
   type: z.enum(["remote", "hybrid", "onsite"]),
+  approved_disability: z
+    .string()
+    .optional()
+    .superRefine((val, ctx) => {
+      const n = approvedDisabilityTokensFromFormString(val).length
+      if (n > MAX_APPROVED_DISABILITY_TAGS) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `You can add at most ${MAX_APPROVED_DISABILITY_TAGS} disability entries.`,
+        })
+      }
+    }),
 })
 
 export type JobPostingFormValues = z.infer<typeof jobPostingFormSchema>
@@ -20,12 +36,14 @@ export const jobPostingFormDefaults: JobPostingFormValues = {
   qualification: "",
   location: "",
   type: "remote",
+  approved_disability: "",
 }
 
 export function jobPostingToFormValues(job: CompanyJobPosting): JobPostingFormValues {
   const t = job.type?.toLowerCase()
   const type =
     t === "hybrid" || t === "onsite" || t === "remote" ? t : "remote"
+  const tags = (job.approved_disability ?? []).filter(Boolean)
   return {
     title: job.title ?? "",
     description: job.description ?? "",
@@ -33,5 +51,6 @@ export function jobPostingToFormValues(job: CompanyJobPosting): JobPostingFormVa
     qualification: job.qualification ?? "",
     location: job.location ?? "",
     type,
+    approved_disability: tags.join(", "),
   }
 }

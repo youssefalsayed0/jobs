@@ -3,6 +3,7 @@ import type { CompanyJobPosting } from "@/types/company-jobs"
 
 export function mapPostingToJobCard(job: CompanyJobPosting): Job {
   const type = job.type?.trim()
+  const approved = job.approved_disability?.filter(Boolean) ?? []
   return {
     id: String(job.id),
     title: job.title?.trim() || "Open role",
@@ -10,6 +11,7 @@ export function mapPostingToJobCard(job: CompanyJobPosting): Job {
     location: job.location?.trim() || "—",
     tags: type ? [type] : [],
     skills: [],
+    approvedDisabilities: approved.length > 0 ? approved : undefined,
     createdAt:
       typeof job.created_at === "string" && job.created_at.trim() !== ""
         ? job.created_at

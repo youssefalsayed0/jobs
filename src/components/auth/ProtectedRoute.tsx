@@ -62,10 +62,9 @@ export function ProtectedRoute({
     )
   }
 
-  // Redirect authenticated users away from login/signup pages
+  // Authenticated users hitting login/signup — always send to home (not `state.from`).
   if (!requireAuth && user) {
-    const from = (location.state as { from?: { pathname: string } })?.from?.pathname
-    return <Navigate to={from || "/"} replace />
+    return <Navigate to="/" replace />
   }
 
   return <>{children}</>

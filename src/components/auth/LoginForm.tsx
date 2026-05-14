@@ -69,19 +69,9 @@ export function LoginForm({ className }: LoginFormProps) {
       className={cn("flex flex-col gap-4", className)}
       onSubmit={form.handleSubmit(async (values) => {
         try {
-          const signedIn = await login(values)
+          await login(values)
           toast.success("Signed in successfully")
-          const role =
-            typeof signedIn.role === "string"
-              ? signedIn.role.toLowerCase()
-              : ""
-          navigate(
-            role === "company"
-              ? "/company/dashboard"
-              : role === "job_seeker"
-                ? "/seeker/dashboard"
-                : "/"
-          )
+          navigate("/")
         } catch (err) {
           const message =
             err instanceof ApiError

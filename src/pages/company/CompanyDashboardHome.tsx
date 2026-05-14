@@ -75,9 +75,7 @@ export function CompanyDashboardHome() {
             <Button variant="outline" className="justify-start rounded-xl" asChild>
               <Link to="/company/profile">Company profile</Link>
             </Button>
-            <Button variant="outline" className="justify-start rounded-xl" asChild>
-              <Link to="/company/team">Invite team members</Link>
-            </Button>
+     
           </CardContent>
         </Card>
       </div>

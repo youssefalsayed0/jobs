@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -21,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import { ApiError } from "@/lib/api/client"
 import {
   type CompanySignupValues,
@@ -29,11 +31,13 @@ import {
 import { cn } from "@/lib/utils"
 
 const industries = [
-  { value: "tech", label: "Technology" },
-  { value: "health", label: "Healthcare" },
-  { value: "finance", label: "Finance" },
-  { value: "retail", label: "Retail" },
-  { value: "edu", label: "Education" },
+  { value: "Technology", label: "Technology" },
+  { value: "Healthcare", label: "Healthcare" },
+  { value: "Finance", label: "Finance" },
+  { value: "Retail", label: "Retail" },
+  { value: "Education", label: "Education" },
+  { value: "Manufacturing", label: "Manufacturing" },
+  { value: "Other", label: "Other" },
 ] as const
 
 const sizes = [
@@ -64,6 +68,7 @@ export function CompanySignupForm({ className }: CompanySignupFormProps) {
       confirmPassword: "",
       industry: "",
       companySize: "",
+      disabilitySupportPolicy: "",
     },
   })
 
@@ -81,6 +86,10 @@ export function CompanySignupForm({ className }: CompanySignupFormProps) {
             company_name: values.companyName,
             industry: values.industry,
             company_size: values.companySize,
+            phone: values.phone?.trim() ? values.phone.trim() : null,
+            disability_support_policy: values.disabilitySupportPolicy?.trim()
+              ? values.disabilitySupportPolicy.trim()
+              : null,
           })
           logout()
           toast.success("Account created. Sign in to continue.")
@@ -115,26 +124,6 @@ export function CompanySignupForm({ className }: CompanySignupFormProps) {
                 id="company-signup-form-companyName"
                 placeholder="Company Name"
                 autoComplete="organization"
-                aria-invalid={fieldState.invalid}
-                className="h-11 rounded-md border-slate-200 bg-slate-50 placeholder:text-slate-400"
-              />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-
-        <Controller
-          name="phone"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="company-signup-form-phone">Phone</FieldLabel>
-              <Input
-                {...field}
-                id="company-signup-form-phone"
-                type="tel"
-                placeholder="Phone"
-                autoComplete="tel"
                 aria-invalid={fieldState.invalid}
                 className="h-11 rounded-md border-slate-200 bg-slate-50 placeholder:text-slate-400"
               />
@@ -286,6 +275,53 @@ export function CompanySignupForm({ className }: CompanySignupFormProps) {
             )}
           />
         </div>
+
+        <Controller
+          name="phone"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="company-signup-form-phone">Phone (optional)</FieldLabel>
+              <Input
+                {...field}
+                id="company-signup-form-phone"
+                type="tel"
+                placeholder="Company phone"
+                autoComplete="tel"
+                aria-invalid={fieldState.invalid}
+                className="h-11 rounded-md border-slate-200 bg-slate-50 placeholder:text-slate-400"
+              />
+              <FieldDescription>
+                Leave blank to register without a company phone number.
+              </FieldDescription>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <Controller
+          name="disabilitySupportPolicy"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="company-signup-form-disabilityPolicy">
+                Disability support policy (optional)
+              </FieldLabel>
+              <Textarea
+                {...field}
+                id="company-signup-form-disabilityPolicy"
+                placeholder="How your workplace supports employees with disabilities…"
+                rows={4}
+                aria-invalid={fieldState.invalid}
+                className="min-h-[100px] rounded-md border-slate-200 bg-slate-50 placeholder:text-slate-400"
+              />
+              <FieldDescription>
+                Optional. Leave blank if you will add this later.
+              </FieldDescription>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
       </FieldGroup>
 
       <Button

@@ -1,4 +1,4 @@
-import { extractRows } from "@/lib/company-jobs-parse"
+import { extractRows, stripCompanyNameUpdatedSuffix } from "@/lib/company-jobs-parse"
 import type {
   ApplicationApplicantSnippet,
   ApplicationJobSnippet,
@@ -8,8 +8,9 @@ import type {
 function parseJobSnippet(o: Record<string, unknown>): ApplicationJobSnippet {
   return {
     title: typeof o.title === "string" ? o.title : undefined,
-    company_name:
-      typeof o.company_name === "string" ? o.company_name : undefined,
+    company_name: stripCompanyNameUpdatedSuffix(
+      typeof o.company_name === "string" ? o.company_name : undefined
+    ),
     description:
       typeof o.description === "string" ? o.description : undefined,
     requirements:

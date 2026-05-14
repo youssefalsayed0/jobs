@@ -10,6 +10,8 @@ export type CompanyJobPosting = {
   qualification?: string
   location?: string
   type?: string
+  /** Disabilities / conditions this role explicitly welcomes (API array). */
+  approved_disability?: string[]
   created_at?: string
   updated_at?: string
   applications_count?: number
@@ -22,6 +24,7 @@ export type CompanyJobPostingInput = {
   qualification: string
   location: string
   type: string
+  approved_disability: string[]
 }
 
 export type JobApplicationRow = {
@@ -33,7 +36,20 @@ export type JobApplicationRow = {
   email?: string
   phone?: string
   linkedin?: string | null
+  /** Legacy filename or path; prefer `cv_url` when present. */
   cv?: string | null
+  /** Full URL to applicant CV (top-level or under `seeker_profile`). */
+  cv_url?: string | null
+  /** Flattened from `seeker_profile` when the API nests applicant fields. */
+  gender?: string
+  city?: string
+  street?: string
+  disability_type?: string
+  profile_photo_url?: string
+  skills?: string[]
+  educations_summary?: string
+  experiences_summary?: string
+  certificates_summary?: string
 }
 
 /** Values accepted by PATCH .../applications/:id `{ status }` on this project API. */

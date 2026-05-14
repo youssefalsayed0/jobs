@@ -4,6 +4,7 @@ import { Link } from "react-router-dom"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { ApprovedDisabilitiesBadges } from "@/components/job-postings/ApprovedDisabilitiesBadges"
 import {
   formatJobDateTimeLong,
   formatTimeAgo,
@@ -17,6 +18,8 @@ export type Job = {
   location: string
   tags: string[]
   skills: string[]
+  /** Job posting `approved_disability` — shown on cards when present. */
+  approvedDisabilities?: string[]
   /** Raw or ISO datetime from API; shown as relative “Posted … ago” when parseable. */
   createdAt?: string
 }
@@ -28,6 +31,7 @@ type JobCardProps = {
 export function JobCard({ job }: JobCardProps) {
   const skillsText = job.skills.filter(Boolean).join(", ")
   const showTags = job.tags.length > 0
+  const disabilityTags = job.approvedDisabilities?.filter(Boolean) ?? []
 
   return (
     <Card className="group flex h-full flex-col overflow-hidden rounded-3xl border-border/70 bg-card/95 shadow-sm transition-all duration-200 hover:border-primary/20 hover:shadow-md">
@@ -74,6 +78,18 @@ export function JobCard({ job }: JobCardProps) {
             </>
           ) : null}
         </div>
+
+        {disabilityTags.length > 0 ? (
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Welcoming
+            </p>
+            <ApprovedDisabilitiesBadges
+              items={disabilityTags}
+              maxVisible={4}
+            />
+          </div>
+        ) : null}
 
         {skillsText ? (
           <p className="line-clamp-2 text-sm text-muted-foreground">
