@@ -14,6 +14,30 @@ export const loginSchema = z.object({
   password: z.string().min(1, { message: "Password is required" }),
 })
 
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .min(1, { message: "Email is required" })
+    .email({ message: "Invalid email" }),
+})
+
+export const resetPasswordSchema = z
+  .object({
+    email: z
+      .string()
+      .min(1, { message: "Email is required" })
+      .email({ message: "Invalid email" }),
+    token: z.string().min(1, { message: "Reset token is required" }),
+    password: passwordRules,
+    password_confirmation: z
+      .string()
+      .min(1, { message: "Confirm your password" }),
+  })
+  .refine((d) => d.password === d.password_confirmation, {
+    message: "Passwords do not match",
+    path: ["password_confirmation"],
+  })
+
 export const jobSeekerSignupSchema = z
   .object({
     fullName: z
@@ -81,5 +105,7 @@ export const companySignupSchema = z
   })
 
 export type LoginValues = z.infer<typeof loginSchema>
+export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>
+export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>
 export type JobSeekerSignupValues = z.infer<typeof jobSeekerSignupSchema>
 export type CompanySignupValues = z.infer<typeof companySignupSchema>

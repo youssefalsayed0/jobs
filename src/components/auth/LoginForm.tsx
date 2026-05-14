@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -46,6 +46,13 @@ export function LoginForm({ className }: LoginFormProps) {
 		mode: "all",
 		defaultValues: { email: "", password: "" },
 	});
+
+	const loginEmailRaw = useWatch({ control: form.control, name: "email" });
+	const loginEmail = (loginEmailRaw ?? "").trim();
+	const forgotPasswordTo =
+		loginEmail.length > 0
+			? `/forgot-password?email=${encodeURIComponent(loginEmail)}`
+			: "/forgot-password";
 
 	return (
 		<form
@@ -118,7 +125,7 @@ export function LoginForm({ className }: LoginFormProps) {
 			</FieldGroup>
 
 			<div className="flex justify-end">
-				<Link to="#" className="text-sm font-medium text-primary hover:underline" onClick={(e) => e.preventDefault()}>
+				<Link to={forgotPasswordTo} className="text-sm font-medium text-primary hover:underline">
 					Forgot Password?
 				</Link>
 			</div>

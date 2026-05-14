@@ -15,9 +15,11 @@ import { CompanyProfilePage } from "@/pages/company/CompanyProfilePage";
 import { HomePage } from "@/pages/HomePage";
 import { JobsListPage } from "@/pages/JobsListPage";
 import { LoginPage } from "@/pages/LoginPage";
+import { SignupPage } from "@/pages/SignupPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PublicJobDetailPage } from "@/pages/PublicJobDetailPage";
-import { SignupPage } from "@/pages/SignupPage";
+import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { SubscriptionPlansPage } from "@/pages/SubscriptionPlansPage";
 import { JobSeekerDashboardLayout } from "@/layouts/JobSeekerDashboardLayout";
 import { JobSeekerApplicationsPage } from "@/pages/seeker/JobSeekerApplicationsPage";
@@ -64,6 +66,22 @@ function App() {
 						element={
 							<ProtectedRoute requireAuth={false}>
 								<SignupPage />
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="forgot-password"
+						element={
+							<ProtectedRoute requireAuth={false}>
+								<ForgotPasswordPage />
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="reset-password"
+						element={
+							<ProtectedRoute requireAuth={false}>
+								<ResetPasswordPage />
 							</ProtectedRoute>
 						}
 					/>
