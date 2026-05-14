@@ -4,16 +4,11 @@ import { toast } from "sonner"
 import { useApi } from "@/hooks/useApi"
 import { ApiError } from "@/lib/api/client"
 import {
-  extractRows,
-  parseJobApplications,
-  parseJobPosting,
+  type CompanyApplicationAggregateRow,
+  parseCompanyApplicationsAggregate,
 } from "@/lib/company-jobs-parse"
-import type { CompanyJobPosting, JobApplicationRow } from "@/types/company-jobs"
 
-export type CompanyApplicantAggregateRow = JobApplicationRow & {
-  jobId: string
-  jobTitle: string
-}
+export type CompanyApplicantAggregateRow = CompanyApplicationAggregateRow
 
 function rowUpdateKey(jobId: string, applicationId: string | number) {
   return `${jobId}:${String(applicationId)}`
@@ -28,25 +23,8 @@ export function useCompanyApplicantsAggregate() {
   const refetch = useCallback(async () => {
     setLoading(true)
     try {
-      const listJson = await get("/api/company/job-postings")
-      const jobs = extractRows(listJson)
-        .map(parseJobPosting)
-        .filter((j): j is CompanyJobPosting => j !== null)
-
-      const chunks = await Promise.all(
-        jobs.map(async (job) => {
-          const json = await get(
-            `/api/company/job-postings/${job.id}/applications`
-          )
-          const apps = parseJobApplications(json)
-          return apps.map((a) => ({
-            ...a,
-            jobId: String(job.id),
-            jobTitle: job.title ?? `Job #${job.id}`,
-          }))
-        })
-      )
-      setRows(chunks.flat())
+      const json = await get("/api/company/applications")
+      setRows(parseCompanyApplicationsAggregate(json))
     } catch (err) {
       const message =
         err instanceof ApiError

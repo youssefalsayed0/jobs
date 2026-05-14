@@ -83,6 +83,12 @@ export function parseJobPosting(row: unknown): CompanyJobPosting | null {
     company_name: stripCompanyNameUpdatedSuffix(
       typeof o.company_name === "string" ? o.company_name : undefined
     ),
+    company_profile_photo_url: (() => {
+      const u = o.company_profile_photo_url
+      if (typeof u === "string" && u.trim() !== "") return u.trim()
+      if (u === null) return null
+      return undefined
+    })(),
     description: typeof o.description === "string" ? o.description : undefined,
     requirements:
       typeof o.requirements === "string" ? o.requirements : undefined,
@@ -106,6 +112,78 @@ export function parseJobApplications(json: unknown): JobApplicationRow[] {
   return extractApplicationRows(json)
     .map(parseApplication)
     .filter((x): x is JobApplicationRow => x !== null)
+}
+
+/** Job posting / listing nested on an application (company applications index). */
+function getNestedJobRecord(
+  o: Record<string, unknown>
+): Record<string, unknown> | null {
+  const candidates = [
+    o.job_posting,
+    o.jobPosting,
+    o.job,
+    o.listing,
+    o.job_listing,
+  ]
+  for (const v of candidates) {
+    if (v && typeof v === "object" && !Array.isArray(v)) {
+      return v as Record<string, unknown>
+    }
+  }
+  return null
+}
+
+/**
+ * Resolves job id + title for aggregate applicant rows (e.g. GET /api/company/applications).
+ */
+export function extractJobMetaFromApplicationPayload(
+  o: Record<string, unknown>
+): { jobId: string; jobTitle: string } | null {
+  const nested = getNestedJobRecord(o)
+  const idCandidate =
+      o.job_posting_id ?? o.job_id ?? o.job_postingId ?? nested?.id
+
+  if (typeof idCandidate !== "number" && typeof idCandidate !== "string") {
+    return null
+  }
+
+  const titleFromNested =
+    typeof nested?.title === "string" ? nested.title.trim() : ""
+  const titleFromRoot =
+    typeof o.job_title === "string" ? o.job_title.trim() : ""
+  const jobTitle =
+    titleFromNested || titleFromRoot || `Job #${String(idCandidate)}`
+
+  return { jobId: String(idCandidate), jobTitle }
+}
+
+export type CompanyApplicationAggregateRow = JobApplicationRow & {
+  jobId: string
+  jobTitle: string
+}
+
+/**
+ * Parses company-wide applications list; each row includes jobId/jobTitle for the applicants table.
+ */
+export function parseCompanyApplicationsAggregate(
+  json: unknown
+): CompanyApplicationAggregateRow[] {
+  const out: CompanyApplicationAggregateRow[] = []
+  for (const row of extractApplicationRows(json)) {
+    if (!row || typeof row !== "object") continue
+    const o = row as Record<string, unknown>
+    const meta = extractJobMetaFromApplicationPayload(o)
+    if (!meta) continue
+    const base = parseApplication(row)
+    if (!base) continue
+    out.push({
+      ...base,
+      jobId: meta.jobId,
+      jobTitle: meta.jobTitle,
+      job_title: base.job_title?.trim() ? base.job_title : meta.jobTitle,
+    })
+  }
+  return out
 }
 
 function getSeekerProfile(
@@ -273,6 +351,14 @@ function parseApplication(row: unknown): JobApplicationRow | null {
   const id = o.id
   if (typeof id !== "number" && typeof id !== "string") return null
   const sp = getSeekerProfile(o)
+  const userIdRoot = o.user_id
+  const userIdSeeker = sp?.id
+  const user_id =
+    typeof userIdRoot === "number" || typeof userIdRoot === "string"
+      ? userIdRoot
+      : typeof userIdSeeker === "number" || typeof userIdSeeker === "string"
+        ? userIdSeeker
+        : undefined
   const linkedinRoot = o.linkedin
   const seekerLinkedin = sp?.linkedin
   let linkedin: string | null | undefined
@@ -309,6 +395,7 @@ function parseApplication(row: unknown): JobApplicationRow | null {
     : ""
   return {
     id,
+    ...(user_id !== undefined ? { user_id } : {}),
     status: typeof o.status === "string" ? o.status : undefined,
     submitted_at:
       typeof o.submitted_at === "string" ? o.submitted_at : undefined,

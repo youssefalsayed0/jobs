@@ -113,6 +113,9 @@ export function CompanyJobDetailPage() {
               All jobs
             </Link>
           </Button>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+            {job.title ?? "Job posting"}
+          </h1>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary" className="rounded-full capitalize">
               {job.type ? formatLabel(job.type) : "Role"}
@@ -124,9 +127,6 @@ export function CompanyJobDetailPage() {
               </span>
             ) : null}
           </div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            {job.title ?? "Job posting"}
-          </h1>
           {job.location ? (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <MapPinIcon className="size-4 shrink-0 text-primary/80" />
@@ -165,16 +165,11 @@ export function CompanyJobDetailPage() {
           <div className="flex items-center gap-2 text-muted-foreground">
             <BriefcaseIcon className="size-5 text-primary" />
             <CardTitle className="text-base font-semibold text-foreground">
-              Job record
+              Details
             </CardTitle>
           </div>
- 
         </CardHeader>
         <CardContent className="grid gap-6 p-6 sm:grid-cols-2 xl:grid-cols-3 sm:p-8">
-          <FieldBlock label="Job ID">{String(job.id)}</FieldBlock>
-          {job.user_id !== undefined ? (
-            <FieldBlock label="User ID">{String(job.user_id)}</FieldBlock>
-          ) : null}
           <FieldBlock label="Title">{job.title ?? "—"}</FieldBlock>
           <FieldBlock label="Company name">
             {job.company_name ?? "—"}

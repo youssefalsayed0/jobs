@@ -1,5 +1,18 @@
 import { z } from "zod"
 
+function optionalHttpUrl(message = "Enter a valid URL (https://…)") {
+  return z.string().refine((s) => {
+    const t = s.trim()
+    if (t === "") return true
+    try {
+      const u = new URL(t)
+      return u.protocol === "http:" || u.protocol === "https:"
+    } catch {
+      return false
+    }
+  }, { message })
+}
+
 export const companyProfileSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
   email: z
@@ -9,6 +22,11 @@ export const companyProfileSchema = z.object({
   industry: z.string().min(1, "Industry is required"),
   company_size: z.string().min(1, "Company size is required"),
   disability_support_policy: z.string().optional(),
+  overview: z.string().optional(),
+  facebook_url: optionalHttpUrl(),
+  x_url: optionalHttpUrl(),
+  linkedin_url: optionalHttpUrl(),
+  instagram_url: optionalHttpUrl(),
   phone: z.string().optional(),
   street: z.string().optional(),
   city: z.string().optional(),

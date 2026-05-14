@@ -17,24 +17,27 @@ export function useEmployerDashboardStats() {
   const refetch = useCallback(async () => {
     setLoading(true)
     try {
-      const listJson = await get("/api/company/job-postings")
-      const jobs = extractRows(listJson)
-        .map(parseJobPosting)
-        .filter((j): j is CompanyJobPosting => j !== null)
-      setJobCount(jobs.length)
+      const [jobsOutcome, applicationsOutcome] = await Promise.allSettled([
+        get("/api/company/job-postings"),
+        get("/api/company/applications"),
+      ])
 
-      const counts = await Promise.all(
-        jobs.map(async (job) => {
-          const json = await get(
-            `/api/company/job-postings/${job.id}/applications`
-          )
-          return parseJobApplications(json).length
-        })
-      )
-      setApplicantCount(counts.reduce((a, b) => a + b, 0))
-    } catch {
-      setJobCount(null)
-      setApplicantCount(null)
+      if (jobsOutcome.status === "fulfilled") {
+        const jobs = extractRows(jobsOutcome.value)
+          .map(parseJobPosting)
+          .filter((j): j is CompanyJobPosting => j !== null)
+        setJobCount(jobs.length)
+      } else {
+        setJobCount(null)
+      }
+
+      if (applicationsOutcome.status === "fulfilled") {
+        setApplicantCount(
+          parseJobApplications(applicationsOutcome.value).length
+        )
+      } else {
+        setApplicantCount(null)
+      }
     } finally {
       setLoading(false)
     }

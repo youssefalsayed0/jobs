@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicJobPostings } from "@/hooks/job-seeker/usePublicJobPostings"
 import { mapPostingToJobCard } from "@/lib/map-public-job-card"
+import { visiblePageRange } from "@/lib/visible-page-range"
 import { cn } from "@/lib/utils"
 
 function JobsGridSkeleton() {
@@ -50,33 +51,6 @@ function JobsGridSkeleton() {
       ))}
     </div>
   )
-}
-
-function visiblePageRange(
-  current: number,
-  last: number
-): (number | "ellipsis")[] {
-  if (last <= 7) {
-    return Array.from({ length: last }, (_, i) => i + 1)
-  }
-  const set = new Set([
-    1,
-    last,
-    current,
-    current - 1,
-    current + 1,
-  ])
-  const sorted = [...set]
-    .filter((p) => p >= 1 && p <= last)
-    .sort((a, b) => a - b)
-  const out: (number | "ellipsis")[] = []
-  let prev = 0
-  for (const p of sorted) {
-    if (prev > 0 && p - prev > 1) out.push("ellipsis")
-    out.push(p)
-    prev = p
-  }
-  return out
 }
 
 export function JobsListPage() {

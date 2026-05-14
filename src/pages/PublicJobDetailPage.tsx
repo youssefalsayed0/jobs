@@ -1,18 +1,12 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Accessibility, ArrowLeftIcon, BriefcaseIcon, Building2Icon, ClipboardListIcon, GraduationCapIcon, MapPinIcon, SparklesIcon, UploadIcon } from "lucide-react";
-import { useState, type ReactNode } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Accessibility, ArrowLeftIcon, BriefcaseIcon, Building2Icon, ClipboardListIcon, GraduationCapIcon, MapPinIcon, SparklesIcon } from "lucide-react";
+import { type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { z } from "zod";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApprovedDisabilitiesBadges } from "@/components/job-postings/ApprovedDisabilitiesBadges";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/contexts/auth-context";
@@ -20,27 +14,6 @@ import { useJobApplicationSubmit } from "@/hooks/job-seeker/useJobApplicationSub
 import { usePublicJobDetail } from "@/hooks/job-seeker/usePublicJobDetail";
 import { formatJobDateTimeLong, formatTimeAgo } from "@/lib/format-job-dates";
 import { cn } from "@/lib/utils";
-
-const applySchema = z
-	.object({
-		name: z.string().min(1, "Name is required"),
-		email: z.string().email("Valid email required"),
-		phone: z.string().min(1, "Phone is required"),
-		linkedin: z.string().optional(),
-		cv: z.any().optional(),
-	})
-	.superRefine((data, ctx) => {
-		const files = data.cv;
-		if (!(files instanceof FileList) || files.length === 0) {
-			ctx.addIssue({
-				code: z.ZodIssueCode.custom,
-				message: "Please attach your CV (PDF or DOC)",
-				path: ["cv"],
-			});
-		}
-	});
-
-type ApplyValues = z.infer<typeof applySchema>;
 
 function formatWorkType(t: string | undefined): string | null {
 	if (!t?.trim()) return null;
@@ -113,44 +86,25 @@ export function PublicJobDetailPage() {
 	const { user } = useAuth();
 	const { job, loading } = usePublicJobDetail(jobId);
 	const { submit, submitting } = useJobApplicationSubmit();
-	const [applyOpen, setApplyOpen] = useState(false);
 
 	const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
 	const isSeeker = role === "job_seeker";
 	const isCompany = role === "company";
 
-	const displayName =
-		(typeof user?.name === "string" && user.name) ||
-		[user?.first_name, user?.last_name]
-			.filter((x) => typeof x === "string" && x.length > 0)
-			.join(" ")
-			.trim() ||
-		"";
-
-	const form = useForm<ApplyValues>({
-		resolver: zodResolver(applySchema),
-		defaultValues: {
-			name: displayName,
-			email: typeof user?.email === "string" ? user.email : "",
-			phone: typeof user?.phone === "string" ? user.phone : "",
-			linkedin: "",
-		},
-	});
-
-	const openApply = () => {
+	const handleApply = async () => {
 		if (!user || !isSeeker) {
 			void navigate("/login", {
 				state: { from: { pathname: `/jobs/${jobId}` } },
 			});
 			return;
 		}
-		form.reset({
-			name: displayName,
-			email: typeof user?.email === "string" ? user.email : "",
-			phone: typeof user?.phone === "string" ? user.phone : "",
-			linkedin: "",
-		});
-		setApplyOpen(true);
+		const id = jobId?.trim();
+		if (!id) return;
+		try {
+			await submit(id);
+		} catch {
+			/* toast in hook */
+		}
 	};
 
 	if (loading) {
@@ -181,6 +135,11 @@ export function PublicJobDetailPage() {
 	const workType = formatWorkType(job.type);
 	const location = job.location?.trim();
 	const company = job.company_name?.trim();
+	const companyLogo =
+		typeof job.company_profile_photo_url === "string" &&
+		job.company_profile_photo_url.trim() !== ""
+			? job.company_profile_photo_url.trim()
+			: null;
 
 	return (
 		<div className="flex min-h-0 flex-1 flex-col bg-linear-to-b from-muted/40 via-background to-muted/20">
@@ -198,6 +157,28 @@ export function PublicJobDetailPage() {
 
 					<div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-12">
 						<div className="min-w-0 flex-1 space-y-5">
+							<div className="space-y-3">
+								<h1 className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-[2.75rem] lg:leading-[1.1]">
+									{job.title ?? "Open role"}
+								</h1>
+								{company ? (
+									<p className="flex items-center gap-3 text-lg text-muted-foreground sm:text-xl">
+										{companyLogo ? (
+											<img
+												src={companyLogo}
+												alt=""
+												className="size-14 shrink-0 rounded-2xl border border-border/60 bg-background object-contain p-1 sm:size-16"
+											/>
+										) : (
+											<span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:size-16">
+												<Building2Icon className="size-7 sm:size-8" />
+											</span>
+										)}
+										<span className="font-semibold text-foreground/90">{company}</span>
+									</p>
+								) : null}
+							</div>
+
 							<div className="flex flex-wrap items-center gap-2">
 								{workType ? (
 									<Badge variant="secondary" className="rounded-lg px-2.5 py-0.5 text-xs font-medium capitalize">
@@ -219,19 +200,6 @@ export function PublicJobDetailPage() {
 								</div>
 							) : null}
 
-							<div className="space-y-3">
-								<p className="text-xs font-semibold tracking-widest text-primary uppercase">Open role</p>
-								<h1 className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-[2.75rem] lg:leading-[1.1]">{job.title ?? "Open role"}</h1>
-								{company ? (
-									<p className="flex items-center gap-2.5 text-lg text-muted-foreground sm:text-xl">
-										<span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-											<Building2Icon className="size-5" />
-										</span>
-										<span className="font-semibold text-foreground/90">{company}</span>
-									</p>
-								) : null}
-							</div>
-
 							<PostedMeta created_at={job.created_at} updated_at={job.updated_at} />
 						</div>
 
@@ -246,8 +214,25 @@ export function PublicJobDetailPage() {
 								</Alert>
 							) : (
 								<>
-									<Button type="button" size="lg" className="h-11 w-full rounded-xl font-semibold shadow-md sm:h-12" onClick={openApply}>
-										{user && isSeeker ? "Apply for this role" : "Sign in to apply"}
+									<Button
+										type="button"
+										size="lg"
+										className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl font-semibold shadow-md sm:h-12"
+										disabled={submitting}
+										onClick={() => {
+											void handleApply();
+										}}
+									>
+										{submitting ? (
+											<>
+												<Spinner className="size-4" />
+												Submitting…
+											</>
+										) : user && isSeeker ? (
+											"Apply for this role"
+										) : (
+											"Sign in to apply"
+										)}
 									</Button>
 									{user && !isSeeker ? (
 										<Alert className="rounded-2xl border-amber-500/25 bg-amber-500/6">
@@ -259,7 +244,9 @@ export function PublicJobDetailPage() {
 										</Alert>
 									) : (
 										<p className="text-center text-xs leading-relaxed text-muted-foreground lg:text-left">
-											{user && isSeeker ? "You will attach your CV and contact details in the next step." : "Create an account or sign in as a job seeker to submit your application."}
+											{user && isSeeker
+												? "Your application is sent using your signed-in job seeker account."
+												: "Create an account or sign in as a job seeker to submit your application."}
 										</p>
 									)}
 								</>
@@ -353,135 +340,6 @@ export function PublicJobDetailPage() {
 				) : null}
 			</div>
 
-			<Dialog open={applyOpen} onOpenChange={setApplyOpen}>
-				<DialogContent className="flex max-h-[min(90vh,720px)] max-w-lg flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
-					<DialogHeader className="shrink-0 space-y-2 border-b border-border/60 bg-muted/10 px-5 py-5 sm:px-6 sm:py-6">
-						<div className="flex items-center gap-2 text-primary">
-							<BriefcaseIcon className="size-5" />
-							<span className="text-xs font-semibold tracking-wide uppercase">Application</span>
-						</div>
-						<DialogTitle className="text-xl sm:text-2xl">Apply for this role</DialogTitle>
-						<DialogDescription>Add your details and CV. You can review everything before submitting.</DialogDescription>
-					</DialogHeader>
-					<form
-						className="flex min-h-0 flex-1 flex-col"
-						onSubmit={form.handleSubmit(async (values) => {
-							if (!jobId) return;
-							const fd = new FormData();
-							fd.append("name", values.name);
-							fd.append("email", values.email);
-							fd.append("phone", values.phone);
-							fd.append("linkedin", values.linkedin?.trim() ?? "");
-							const file = values.cv?.[0];
-							if (file) fd.append("cv", file);
-							try {
-								await submit(jobId, fd);
-								setApplyOpen(false);
-								form.reset();
-							} catch {
-								/* toast in hook */
-							}
-						})}>
-						<div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
-							<FieldGroup className="gap-5">
-								<Controller
-									name="name"
-									control={form.control}
-									render={({ field, fieldState }) => (
-										<Field data-invalid={fieldState.invalid}>
-											<FieldLabel htmlFor="apply-name">Full name</FieldLabel>
-											<FieldContent>
-												<Input id="apply-name" className="h-11 rounded-xl border-border/80" autoComplete="name" {...field} />
-												{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-											</FieldContent>
-										</Field>
-									)}
-								/>
-								<Controller
-									name="email"
-									control={form.control}
-									render={({ field, fieldState }) => (
-										<Field data-invalid={fieldState.invalid}>
-											<FieldLabel htmlFor="apply-email">Email</FieldLabel>
-											<FieldContent>
-												<Input id="apply-email" type="email" className="h-11 rounded-xl border-border/80" autoComplete="email" {...field} />
-												{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-											</FieldContent>
-										</Field>
-									)}
-								/>
-								<Controller
-									name="phone"
-									control={form.control}
-									render={({ field, fieldState }) => (
-										<Field data-invalid={fieldState.invalid}>
-											<FieldLabel htmlFor="apply-phone">Phone</FieldLabel>
-											<FieldContent>
-												<Input id="apply-phone" type="tel" className="h-11 rounded-xl border-border/80" autoComplete="tel" {...field} />
-												{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-											</FieldContent>
-										</Field>
-									)}
-								/>
-								<Controller
-									name="linkedin"
-									control={form.control}
-									render={({ field, fieldState }) => (
-										<Field data-invalid={fieldState.invalid}>
-											<FieldLabel htmlFor="apply-li">LinkedIn</FieldLabel>
-											<FieldContent>
-												<Input id="apply-li" className="h-11 rounded-xl border-border/80" placeholder="https:// (optional)" {...field} />
-												<FieldDescription>Optional — helps recruiters verify your background.</FieldDescription>
-												{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-											</FieldContent>
-										</Field>
-									)}
-								/>
-								<Controller
-									name="cv"
-									control={form.control}
-									render={({ field: { onChange, ref, name }, fieldState }) => (
-										<Field data-invalid={fieldState.invalid}>
-											<FieldLabel htmlFor="apply-cv" className="sr-only">
-												CV file
-											</FieldLabel>
-											<FieldContent>
-												<Input id="apply-cv" name={name} ref={ref} type="file" accept=".pdf,.doc,.docx,application/pdf" className="sr-only" onChange={(e) => onChange(e.target.files)} />
-												<label
-													htmlFor="apply-cv"
-													className={cn(
-														"flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center transition-colors",
-														"hover:border-primary/35 hover:bg-muted/35",
-														"focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/40",
-													)}>
-													<span className="flex size-11 items-center justify-center rounded-full bg-primary/10 text-primary">
-														<UploadIcon className="size-5" />
-													</span>
-													<span className="text-sm font-medium text-foreground">Upload your CV</span>
-													<span className="text-xs text-muted-foreground">PDF, DOC, or DOCX</span>
-												</label>
-												{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-											</FieldContent>
-										</Field>
-									)}
-								/>
-							</FieldGroup>
-						</div>
-						<DialogFooter className="m-0 shrink-0 gap-2 border-t border-border/60 bg-muted/30 px-5 py-4 sm:px-6 sm:py-4">
-							<Button type="submit" size="lg" className="w-full gap-2 rounded-xl font-semibold" disabled={submitting}>
-								{submitting ? (
-									<>
-										<Spinner className="size-4" />
-										Submitting…
-									</>
-								) : (
-									"Submit application"
-								)}
-							</Button>
-						</DialogFooter>
-					</form>
-				</DialogContent>
-			</Dialog>
 		</div>
 	);
 }

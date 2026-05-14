@@ -77,11 +77,11 @@ export function JobFormSheet({
     form.reset(formValues)
   }, [open, mode, jobId, editorPhase, formValues, form])
 
-  return (
+  return (    
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="flex w-full flex-col gap-0 border-l p-0 sm:max-w-xl"
+        className="flex w-full flex-col gap-0 border-l p-0 sm:!max-w-4xl"
       >
         <SheetHeader className="border-b border-border/80 bg-muted/30 px-6 py-7 sm:px-10 sm:py-8">
           <SheetTitle className="font-heading text-xl">

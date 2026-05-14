@@ -5,16 +5,16 @@ import { useApi } from "@/hooks/useApi"
 import { ApiError } from "@/lib/api/client"
 
 export function useJobApplicationSubmit() {
-  const { postForm } = useApi()
+  const { post } = useApi()
   const [submitting, setSubmitting] = useState(false)
 
   const submit = useCallback(
-    async (jobId: string, form: FormData) => {
+    async (jobId: string) => {
       setSubmitting(true)
       try {
-        await postForm(
+        await post(
           `/api/job-postings/${encodeURIComponent(jobId)}/applications`,
-          form
+          undefined
         )
         toast.success("Application submitted")
       } catch (err) {
@@ -30,7 +30,7 @@ export function useJobApplicationSubmit() {
         setSubmitting(false)
       }
     },
-    [postForm]
+    [post]
   )
 
   return { submit, submitting }

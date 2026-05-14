@@ -40,16 +40,16 @@ export function JobCard({ job }: JobCardProps) {
           <h3 className="font-heading text-lg font-semibold leading-snug tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-xl">
             {job.title}
           </h3>
-          <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
             {job.companyLogo ? (
               <img
                 src={job.companyLogo}
                 alt=""
-                className="size-9 shrink-0 rounded-xl border border-border/60 bg-background object-contain p-0.5"
+                className="size-12 shrink-0 rounded-2xl border border-border/60 bg-background object-contain p-1 sm:size-14"
               />
             ) : (
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Building2Icon className="size-4" />
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:size-14">
+                <Building2Icon className="size-6 sm:size-7" />
               </div>
             )}
             <span className="font-medium text-foreground">{job.company}</span>

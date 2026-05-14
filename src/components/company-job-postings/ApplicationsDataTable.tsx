@@ -1,5 +1,6 @@
-import { ExternalLinkIcon, FileTextIcon } from "lucide-react";
+import { ExternalLinkIcon, FileTextIcon, UserRoundIcon } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -69,7 +70,7 @@ export function ApplicationsDataTable({ rows, loading, showJobColumns, emptyMess
 	return (
 		<>
 			<div className={cn("relative w-full overflow-x-auto rounded-xl border border-border/70 bg-white", className)}>
-				<table className="w-full min-w-[880px] border-collapse text-left text-sm">
+				<table className="w-full min-w-[980px] border-collapse text-left text-sm">
 					<thead>
 						<tr className="border-b border-border/60 bg-muted/40">
 							{showJobColumns ? (
@@ -86,6 +87,7 @@ export function ApplicationsDataTable({ rows, loading, showJobColumns, emptyMess
 							<th className="min-w-[10rem] whitespace-nowrap px-3 py-3 font-medium text-muted-foreground sm:px-4">Email</th>
 							<th className="min-w-[6rem] whitespace-nowrap px-3 py-3 font-medium text-muted-foreground sm:px-4">Gender</th>
 							<th className="min-w-[8rem] whitespace-nowrap px-3 py-3 font-medium text-muted-foreground sm:px-4">CV</th>
+							<th className="min-w-[7.5rem] whitespace-nowrap px-3 py-3 font-medium text-muted-foreground sm:px-4">Profile</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -96,6 +98,10 @@ export function ApplicationsDataTable({ rows, loading, showJobColumns, emptyMess
 							const gender = row.gender?.trim();
 							const cvUrl = typeof row.cv_url === "string" && row.cv_url.trim() !== "" ? row.cv_url.trim() : null;
 							const cv = row.cv != null && String(row.cv).trim() !== "" ? String(row.cv).trim() : null;
+							const userId =
+								row.user_id != null && String(row.user_id).trim() !== ""
+									? String(row.user_id).trim()
+									: null;
 
 							return (
 								<tr key={showJobColumns && row.jobId ? `${row.jobId}-${row.id}` : String(row.id)} className="border-b border-border/40 last:border-b-0 even:bg-muted/10">
@@ -160,6 +166,20 @@ export function ApplicationsDataTable({ rows, loading, showJobColumns, emptyMess
 											<span className="font-mono text-xs text-foreground">{cv}</span>
 										) : (
 											<span className="text-muted-foreground">—</span>
+										)}
+									</td>
+									<td className="px-3 py-2.5 sm:px-4">
+										{userId ? (
+											<Link
+												className="inline-flex items-center gap-1.5 text-primary underline-offset-2 hover:underline"
+												to={`/company/applicants/users/${encodeURIComponent(userId)}`}>
+												<UserRoundIcon className="size-3.5 shrink-0" />
+												View
+											</Link>
+										) : (
+											<span className="text-muted-foreground" title="Applicant user id not in API response">
+												—
+											</span>
 										)}
 									</td>
 								</tr>

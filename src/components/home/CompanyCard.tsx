@@ -33,7 +33,9 @@ export function CompanyCard({ company }: CompanyCardProps) {
           <div className="flex-1">
             <h3 className="font-semibold text-slate-900">{company.name}</h3>
             <p className="mt-0.5 text-sm text-slate-500">
-              {company.jobsCount}+ jobs
+              {company.jobsCount > 0
+                ? `${company.jobsCount} open role${company.jobsCount === 1 ? "" : "s"}`
+                : "Company profile"}
             </p>
           </div>
         </CardContent>

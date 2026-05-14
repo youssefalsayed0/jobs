@@ -5,6 +5,8 @@ import { CompanyDashboardLayout } from "@/layouts/CompanyDashboardLayout";
 import { RootLayout } from "@/layouts/RootLayout";
 import { AboutPage } from "@/pages/AboutPage";
 import { CompaniesPage } from "@/pages/CompaniesPage";
+import { CompanyPublicDetailPage } from "@/pages/CompanyPublicDetailPage";
+import { CompanyApplicantUserPage } from "@/pages/company/CompanyApplicantUserPage";
 import { CompanyApplicantsPage } from "@/pages/company/CompanyApplicantsPage";
 import { CompanyDashboardHome } from "@/pages/company/CompanyDashboardHome";
 import { CompanyJobDetailPage } from "@/pages/company/CompanyJobDetailPage";
@@ -30,6 +32,7 @@ function App() {
 					<Route path="jobs/:jobId" element={<PublicJobDetailPage />} />
 					<Route path="jobs" element={<JobsListPage />} />
 					<Route path="companies" element={<CompaniesPage />} />
+					<Route path="companies/:companyId" element={<CompanyPublicDetailPage />} />
 					<Route path="about" element={<AboutPage />} />
 					<Route
 						path="seeker"
@@ -73,6 +76,10 @@ function App() {
 						<Route path="jobs/:jobId" element={<CompanyJobDetailPage />} />
 						<Route path="jobs" element={<CompanyJobsPage />} />
 						<Route path="applicants" element={<CompanyApplicantsPage />} />
+						<Route
+							path="applicants/users/:userId"
+							element={<CompanyApplicantUserPage />}
+						/>
 					</Route>
 					<Route
 						path="company/job-postings"

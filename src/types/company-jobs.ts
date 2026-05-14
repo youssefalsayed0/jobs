@@ -5,6 +5,8 @@ export type CompanyJobPosting = {
   user_id?: number | string
   title?: string
   company_name?: string
+  /** Employer logo URL on public job payloads when present. */
+  company_profile_photo_url?: string | null
   description?: string
   requirements?: string
   qualification?: string
@@ -29,6 +31,8 @@ export type CompanyJobPostingInput = {
 
 export type JobApplicationRow = {
   id: number | string
+  /** Job seeker user id (for company profile deep-links). */
+  user_id?: number | string
   status?: string
   submitted_at?: string
   job_title?: string
