@@ -3,6 +3,7 @@ import { toast } from "sonner"
 
 import { useApi } from "@/hooks/useApi"
 import { ApiError } from "@/lib/api/client"
+import { flattenApiUserPayload } from "@/lib/flatten-user-api-payload"
 
 export type CompanyProfilePayload = Record<string, unknown> | null
 
@@ -11,45 +12,52 @@ export function useCompanyUserProfile() {
   const [profile, setProfile] = useState<CompanyProfilePayload>(null)
   const [loading, setLoading] = useState(true)
 
-  const refetch = useCallback(async () => {
-    setLoading(true)
-    try {
-      const json = (await request("/api/user", { method: "GET" })) as unknown
-      if (json && typeof json === "object") {
-        const o = json as Record<string, unknown>
-        const inner = o.data
-        setProfile(
-          inner && typeof inner === "object"
-            ? (inner as Record<string, unknown>)
-            : o
-        )
-      } else {
-        setProfile(null)
-      }
-    } catch (err) {
-      const message =
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
+  const refetch = useCallback(
+    async (opts?: { background?: boolean }): Promise<CompanyProfilePayload> => {
+      const background = opts?.background === true
+      if (!background) setLoading(true)
+      let next: CompanyProfilePayload = null
+      try {
+        const json = (await request("/api/user", { method: "GET" })) as unknown
+        if (json && typeof json === "object") {
+          const o = json as Record<string, unknown>
+          const inner = o.data
+          next =
+            inner && typeof inner === "object"
+              ? flattenApiUserPayload(inner as Record<string, unknown>)
+              : (o as CompanyProfilePayload)
+          setProfile(next)
+        } else {
+          setProfile(null)
+        }
+      } catch (err) {
+        const message =
+          err instanceof ApiError
             ? err.message
-            : "Failed to load profile"
-      toast.error(message)
-      setProfile(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [request])
+            : err instanceof Error
+              ? err.message
+              : "Failed to load profile"
+        toast.error(message)
+        setProfile(null)
+        next = null
+      } finally {
+        if (!background) setLoading(false)
+      }
+      return next
+    },
+    [request]
+  )
 
   useEffect(() => {
     void refetch()
   }, [refetch])
 
   const saveProfile = useCallback(
-    async (form: FormData) => {
+    async (form: FormData): Promise<CompanyProfilePayload> => {
       try {
         await patchForm("/api/company/profile", form)
         toast.success("Profile updated")
-        await refetch()
+        return await refetch({ background: true })
       } catch (err) {
         const message =
           err instanceof ApiError

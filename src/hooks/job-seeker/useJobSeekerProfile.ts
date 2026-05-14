@@ -3,34 +3,9 @@ import { toast } from "sonner"
 
 import { useApi } from "@/hooks/useApi"
 import { ApiError } from "@/lib/api/client"
+import { flattenApiUserPayload } from "@/lib/flatten-user-api-payload"
 
 export type JobSeekerProfilePayload = Record<string, unknown> | null
-
-/**
- * GET `/api/user` shape differs by environment: flat user, `{ user: {…} }`,
- * or JSON:API-style `{ attributes: {…} }`. Merge so profile fields resolve
- * the same as on local.
- */
-function flattenJobSeekerProfilePayload(
-  inner: Record<string, unknown>
-): Record<string, unknown> {
-  /** Some APIs nest the resource again as `data` inside `data`. */
-  let merged: Record<string, unknown> = { ...inner }
-  const innerData = inner.data
-  if (innerData && typeof innerData === "object" && !Array.isArray(innerData)) {
-    merged = { ...merged, ...(innerData as Record<string, unknown>) }
-  }
-  const attrs = merged.attributes
-  const withAttrs =
-    attrs && typeof attrs === "object" && !Array.isArray(attrs)
-      ? { ...merged, ...(attrs as Record<string, unknown>) }
-      : merged
-  const u = withAttrs.user
-  if (u && typeof u === "object" && !Array.isArray(u)) {
-    return { ...(u as Record<string, unknown>), ...withAttrs }
-  }
-  return withAttrs
-}
 
 export function useJobSeekerProfile() {
   const { request, patchForm } = useApi()
@@ -49,7 +24,7 @@ export function useJobSeekerProfile() {
           const inner = o.data
           next =
             inner && typeof inner === "object"
-              ? flattenJobSeekerProfilePayload(inner as Record<string, unknown>)
+              ? flattenApiUserPayload(inner as Record<string, unknown>)
               : (o as JobSeekerProfilePayload)
           setProfile(next)
         } else {

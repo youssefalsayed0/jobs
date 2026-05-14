@@ -14,8 +14,8 @@ import { mapPublicCompanyToFeaturedCard } from "@/lib/map-home-company-card"
 import { mapPostingToJobCard } from "@/lib/map-public-job-card"
 
 const HOME_FEATURED_COMPANIES_QUERY = {
-  perPage: 80,
-  maxTotal: 500,
+  perPage: 10,
+  maxTotal: 10,
 } satisfies UsePublicCompaniesParams
 
 export function HomePage() {

@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 
 import {
@@ -61,6 +61,41 @@ const COMPANY_SIZE_OPTIONS = [
   { value: "500+", label: "500+" },
 ] as const
 
+function normalizeScalarString(s: string): string {
+  return s
+    .replace(/^\uFEFF/, "")
+    .replace(/\u200B/g, "")
+    .normalize("NFKC")
+    .trim()
+}
+
+/** Compare size strings across hyphen/en-dash variants and casing (production APIs). */
+function normalizeCompanySizeForForm(raw: string): string {
+  const t = normalizeScalarString(raw)
+  if (!t) return ""
+  const collapse = (s: string) => s.replace(/[–—]/g, "-").toLowerCase()
+  const tc = collapse(t)
+  for (const o of COMPANY_SIZE_OPTIONS) {
+    if (collapse(o.value) === tc || collapse(o.label) === tc) return o.value
+  }
+  return ""
+}
+
+function readCompanySizeFromProfile(
+  profile: Record<string, unknown> | null
+): string {
+  if (!profile) return ""
+  const raw = profile.company_size ?? profile.companySize
+  if (raw === null || raw === undefined) return ""
+  const s =
+    typeof raw === "string"
+      ? normalizeScalarString(raw)
+      : typeof raw === "number" && Number.isFinite(raw)
+        ? String(raw)
+        : ""
+  return normalizeCompanySizeForForm(s)
+}
+
 function readOptionalString(
   profile: Record<string, unknown> | null,
   key: string
@@ -84,7 +119,7 @@ function defaultsFromProfile(
     company_name: readOptionalString(profile, "company_name"),
     email: readEmail(profile),
     industry: readOptionalString(profile, "industry"),
-    company_size: readOptionalString(profile, "company_size"),
+    company_size: readCompanySizeFromProfile(profile),
     disability_support_policy: readOptionalString(
       profile,
       "disability_support_policy"
@@ -131,6 +166,18 @@ export function CompanyProfilePage() {
     defaultValues: defaultsFromProfile(null),
   })
 
+  const companySizeSyncKey = useMemo(() => {
+    const d = defaultsFromProfile(profile)
+    const stamp =
+      profile && typeof profile.updated_at === "string"
+        ? profile.updated_at
+        : profile &&
+            (typeof profile.id === "number" || typeof profile.id === "string")
+          ? String(profile.id)
+          : "0"
+    return `${stamp}|${d.company_size}`
+  }, [profile])
+
   const applyProfileToForm = useCallback(() => {
     setPhotoPreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev)
@@ -144,6 +191,12 @@ export function CompanyProfilePage() {
     const next = { ...defaultsFromProfile(profile), clear_profile_photo: false }
     if (!next.email.trim() && typeof user?.email === "string") {
       next.email = user.email
+    }
+    const u =
+      user && typeof user === "object" ? (user as Record<string, unknown>) : null
+    if (!(next.company_size ?? "").trim() && u) {
+      const sz = readCompanySizeFromProfile(u)
+      if (sz) next.company_size = sz
     }
     form.reset(next)
   }, [profile, form, user])
@@ -330,7 +383,7 @@ export function CompanyProfilePage() {
               }
 
               try {
-                await saveProfile(fd)
+                const fresh = await saveProfile(fd)
                 try {
                   await refreshUser()
                 } catch {
@@ -342,6 +395,12 @@ export function CompanyProfilePage() {
                   if (prev) URL.revokeObjectURL(prev)
                   return null
                 })
+                if (fresh) {
+                  form.reset({
+                    ...defaultsFromProfile(fresh),
+                    clear_profile_photo: false,
+                  })
+                }
               } catch {
                 /* toast in hook */
               }
@@ -415,8 +474,9 @@ export function CompanyProfilePage() {
                     <FormItem>
                       <FormLabel>Company size</FormLabel>
                       <Select
+                        key={`company-size-${companySizeSyncKey}`}
                         onValueChange={field.onChange}
-                        value={field.value || undefined}
+                        value={field.value ? field.value : undefined}
                       >
                         <FormControl>
                           <SelectTrigger className="h-11 w-full rounded-xl border-border/80">
