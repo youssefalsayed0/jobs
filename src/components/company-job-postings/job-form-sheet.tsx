@@ -41,6 +41,7 @@ import {
   APPROVED_DISABILITY_SUGGESTIONS,
   MAX_APPROVED_DISABILITY_TAGS,
 } from "@/lib/job-approved-disability"
+import { MAX_JOB_POSTING_SKILLS_TAGS } from "@/lib/job-posting-skills"
 import {
   type JobPostingFormValues,
   jobPostingFormDefaults,
@@ -192,6 +193,59 @@ export function JobFormSheet({
                     {fieldState.invalid ? (
                       <FieldError errors={[fieldState.error]} />
                     ) : null}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="category"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="job-category">Category</FieldLabel>
+                    <Input
+                      {...field}
+                      id="job-category"
+                      placeholder="e.g. Engineering, Design, Sales"
+                      aria-invalid={fieldState.invalid}
+                      value={field.value ?? ""}
+                    />
+                    <FieldDescription>
+                      Optional. Helps candidates find this role on listings.
+                    </FieldDescription>
+                    {fieldState.invalid ? (
+                      <FieldError errors={[fieldState.error]} />
+                    ) : null}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="skills"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="job-skills">Skills</FieldLabel>
+                    <FieldContent>
+                      <SkillsTagsInput
+                        id="job-skills"
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        disabled={form.formState.isSubmitting}
+                        invalid={fieldState.invalid}
+                        maxTags={MAX_JOB_POSTING_SKILLS_TAGS}
+                        limitEntityLabel="skills"
+                        placeholder="e.g. React, PHP — Enter or comma to add"
+                      />
+                      <FieldDescription>
+                        Up to {MAX_JOB_POSTING_SKILLS_TAGS} skills shown on job
+                        cards and the public listing.
+                      </FieldDescription>
+                      {fieldState.invalid ? (
+                        <FieldError errors={[fieldState.error]} />
+                      ) : null}
+                    </FieldContent>
                   </Field>
                 )}
               />

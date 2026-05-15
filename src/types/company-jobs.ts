@@ -12,6 +12,10 @@ export type CompanyJobPosting = {
   qualification?: string
   location?: string
   type?: string
+  /** Job category label from API; may be null when unset. */
+  category?: string | null
+  /** Required or preferred skills for this role (API string array). */
+  skills?: string[]
   /** Disabilities / conditions this role explicitly welcomes (API array). */
   approved_disability?: string[]
   created_at?: string
@@ -26,6 +30,8 @@ export type CompanyJobPostingInput = {
   qualification: string
   location: string
   type: string
+  category: string | null
+  skills: string[]
   approved_disability: string[]
 }
 

@@ -2,6 +2,7 @@ import { useCallback } from "react"
 
 import { useApi } from "@/hooks/useApi"
 import { approvedDisabilityTokensFromFormString } from "@/lib/job-approved-disability"
+import { jobSkillsFromFormString } from "@/lib/job-posting-skills"
 import type { CompanyJobPostingInput } from "@/types/company-jobs"
 import type { JobPostingFormValues } from "@/lib/validations/company-job"
 
@@ -13,6 +14,8 @@ function toApiPayload(values: JobPostingFormValues): CompanyJobPostingInput {
     qualification: values.qualification.trim(),
     location: values.location.trim(),
     type: values.type,
+    category: values.category?.trim() ? values.category.trim() : null,
+    skills: jobSkillsFromFormString(values.skills),
     approved_disability: approvedDisabilityTokensFromFormString(
       values.approved_disability
     ),

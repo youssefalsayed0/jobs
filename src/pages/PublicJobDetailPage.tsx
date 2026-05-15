@@ -1,4 +1,4 @@
-import { Accessibility, ArrowLeftIcon, BriefcaseIcon, Building2Icon, ClipboardListIcon, GraduationCapIcon, MapPinIcon, SparklesIcon } from "lucide-react";
+import { Accessibility, ArrowLeftIcon, BriefcaseIcon, Building2Icon, ClipboardListIcon, GraduationCapIcon, MapPinIcon, SparklesIcon, TagsIcon } from "lucide-react";
 import { type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
@@ -133,6 +133,8 @@ export function PublicJobDetailPage() {
 	}
 
 	const workType = formatWorkType(job.type);
+	const category = job.category?.trim() || null;
+	const jobSkills = (job.skills ?? []).filter(Boolean);
 	const location = job.location?.trim();
 	const company = job.company_name?.trim();
 	const companyLogo =
@@ -180,6 +182,11 @@ export function PublicJobDetailPage() {
 							</div>
 
 							<div className="flex flex-wrap items-center gap-2">
+								{category ? (
+									<Badge variant="secondary" className="rounded-lg px-2.5 py-0.5 text-xs font-medium">
+										{category}
+									</Badge>
+								) : null}
 								{workType ? (
 									<Badge variant="secondary" className="rounded-lg px-2.5 py-0.5 text-xs font-medium capitalize">
 										{workType}
@@ -257,6 +264,24 @@ export function PublicJobDetailPage() {
 			</header>
 
 			<div className="container mx-auto w-full flex-1 space-y-6 px-4 py-8 sm:space-y-8 sm:px-8 sm:py-10 lg:py-12">
+				{jobSkills.length > 0 ? (
+					<Card className="overflow-hidden rounded-3xl border-border/70 bg-card/95 shadow-sm">
+						<CardHeader className="border-b border-border/50 bg-muted/15 px-6 py-6 sm:px-8 sm:py-7">
+							<div className="flex items-start gap-3">
+								<div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+									<TagsIcon className="size-5" />
+								</div>
+								<div className="min-w-0 space-y-1">
+									<CardTitle className="text-lg sm:text-xl">Skills</CardTitle>
+									<CardDescription>Skills associated with this role.</CardDescription>
+								</div>
+							</div>
+						</CardHeader>
+						<CardContent className="px-6 py-7 sm:px-8 sm:py-8">
+							<ApprovedDisabilitiesBadges items={jobSkills} />
+						</CardContent>
+					</Card>
+				) : null}
 				{job.approved_disability && job.approved_disability.length > 0 ? (
 					<Card className="overflow-hidden rounded-3xl border-border/70 bg-card/95 shadow-sm">
 						<CardHeader className="border-b border-border/50 bg-muted/15 px-6 py-6 sm:px-8 sm:py-7">

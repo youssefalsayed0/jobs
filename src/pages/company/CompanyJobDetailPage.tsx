@@ -117,6 +117,11 @@ export function CompanyJobDetailPage() {
             {job.title ?? "Job posting"}
           </h1>
           <div className="flex flex-wrap items-center gap-2">
+            {job.category ? (
+              <Badge variant="outline" className="rounded-full">
+                {job.category}
+              </Badge>
+            ) : null}
             <Badge variant="secondary" className="rounded-full capitalize">
               {job.type ? formatLabel(job.type) : "Role"}
             </Badge>
@@ -178,6 +183,16 @@ export function CompanyJobDetailPage() {
             {job.type ? formatLabel(job.type) : "—"}
           </FieldBlock>
           <FieldBlock label="Location">{job.location ?? "—"}</FieldBlock>
+          <FieldBlock label="Category">{job.category ?? "—"}</FieldBlock>
+          <div className="sm:col-span-2 xl:col-span-3">
+            <FieldBlock label="Skills">
+              {job.skills && job.skills.length > 0 ? (
+                <ApprovedDisabilitiesBadges items={job.skills} />
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              )}
+            </FieldBlock>
+          </div>
           <div className="sm:col-span-2 xl:col-span-3">
             <FieldBlock label="Disabilities we welcome">
               {job.approved_disability && job.approved_disability.length > 0 ? (

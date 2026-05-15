@@ -4,6 +4,11 @@ import {
   approvedDisabilityTokensFromFormString,
   MAX_APPROVED_DISABILITY_TAGS,
 } from "@/lib/job-approved-disability"
+import {
+  jobSkillsFromFormString,
+  MAX_JOB_POSTING_SKILLS_TAGS,
+} from "@/lib/job-posting-skills"
+import { jobSkillsToFormString } from "@/lib/job-posting-skills"
 import type { CompanyJobPosting } from "@/types/company-jobs"
 
 export const jobPostingFormSchema = z.object({
@@ -13,6 +18,18 @@ export const jobPostingFormSchema = z.object({
   qualification: z.string().min(1, "Qualifications are required"),
   location: z.string().min(1, "Location is required"),
   type: z.enum(["remote", "hybrid", "onsite"]),
+  category: z.string().optional(),
+  skills: z
+    .string()
+    .optional()
+    .superRefine((val, ctx) => {
+      if (jobSkillsFromFormString(val).length > MAX_JOB_POSTING_SKILLS_TAGS) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `You can add at most ${MAX_JOB_POSTING_SKILLS_TAGS} skills.`,
+        })
+      }
+    }),
   approved_disability: z
     .string()
     .optional()
@@ -36,6 +53,8 @@ export const jobPostingFormDefaults: JobPostingFormValues = {
   qualification: "",
   location: "",
   type: "remote",
+  category: "",
+  skills: "",
   approved_disability: "",
 }
 
@@ -51,6 +70,8 @@ export function jobPostingToFormValues(job: CompanyJobPosting): JobPostingFormVa
     qualification: job.qualification ?? "",
     location: job.location ?? "",
     type,
+    category: job.category ?? "",
+    skills: jobSkillsToFormString(job.skills),
     approved_disability: tags.join(", "),
   }
 }

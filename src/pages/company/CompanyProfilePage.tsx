@@ -34,9 +34,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+import { RequiredMark } from "@/components/ui/required-mark"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/contexts/auth-context"
+import { DeleteAccountSection } from "@/components/profile/DeleteAccountSection"
 import { useCompanyUserProfile } from "@/hooks/company/useCompanyUserProfile"
 import {
   companyProfileSchema,
@@ -156,7 +158,8 @@ function FormSkeleton() {
 
 export function CompanyProfilePage() {
   const { user, refreshUser } = useAuth()
-  const { profile, loading, refetch, saveProfile } = useCompanyUserProfile()
+  const { profile, loading, refetch, saveProfile, deleteAccount } =
+    useCompanyUserProfile()
   const [pendingPhoto, setPendingPhoto] = useState(false)
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
 
@@ -366,7 +369,7 @@ export function CompanyProfilePage() {
               fd.append("x_url", values.x_url?.trim() ?? "")
               fd.append("linkedin_url", values.linkedin_url?.trim() ?? "")
               fd.append("instagram_url", values.instagram_url?.trim() ?? "")
-              fd.append("phone", values.phone?.trim() ?? "")
+              fd.append("phone", values.phone.trim())
               fd.append("street", values.street?.trim() ?? "")
               fd.append("city", values.city?.trim() ?? "")
               fd.append(
@@ -438,7 +441,10 @@ export function CompanyProfilePage() {
                   name="company_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Company name</FormLabel>
+                      <FormLabel>
+                        Company name
+                        <RequiredMark />
+                      </FormLabel>
                       <FormControl>
                         <Input
                           className="h-11 rounded-xl border-border/80"
@@ -455,7 +461,10 @@ export function CompanyProfilePage() {
                   name="industry"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Industry</FormLabel>
+                      <FormLabel>
+                        Industry
+                        <RequiredMark />
+                      </FormLabel>
                       <FormControl>
                         <Input
                           className="h-11 rounded-xl border-border/80"
@@ -472,7 +481,10 @@ export function CompanyProfilePage() {
                   name="company_size"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Company size</FormLabel>
+                      <FormLabel>
+                        Company size
+                        <RequiredMark />
+                      </FormLabel>
                       <Select
                         key={`company-size-${companySizeSyncKey}`}
                         onValueChange={field.onChange}
@@ -654,7 +666,10 @@ export function CompanyProfilePage() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>
+                        Email
+                        <RequiredMark />
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="email"
@@ -676,7 +691,10 @@ export function CompanyProfilePage() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone</FormLabel>
+                      <FormLabel>
+                        Phone
+                        <RequiredMark />
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="tel"
@@ -766,6 +784,12 @@ export function CompanyProfilePage() {
                 />
               </CardContent>
             </Card>
+
+            <DeleteAccountSection
+              accountLabel="company account"
+              onDelete={deleteAccount}
+              className="mb-2"
+            />
 
             <div
               className={cn(

@@ -317,6 +317,14 @@ export function CompanyJobsPanel() {
                           </DropdownMenu>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
+                          {job.category ? (
+                            <Badge
+                              variant="outline"
+                              className="rounded-full border-border/80 px-2.5 py-0.5 text-xs font-medium"
+                            >
+                              {job.category}
+                            </Badge>
+                          ) : null}
                           {job.type ? (
                             <Badge
                               variant="secondary"
@@ -341,6 +349,17 @@ export function CompanyJobsPanel() {
                             <ApprovedDisabilitiesBadges
                               items={job.approved_disability}
                               maxVisible={5}
+                            />
+                          </div>
+                        ) : null}
+                        {job.skills && job.skills.length > 0 ? (
+                          <div className="space-y-1">
+                            <p className="text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
+                              Skills
+                            </p>
+                            <ApprovedDisabilitiesBadges
+                              items={job.skills}
+                              maxVisible={6}
                             />
                           </div>
                         ) : null}

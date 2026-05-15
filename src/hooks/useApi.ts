@@ -27,8 +27,19 @@ export function useApi() {
           { token, skipAuth: opts?.skipAuth }
         ),
 
-      del: (path: string, opts?: { skipAuth?: boolean }) =>
-        apiRequest(path, { method: "DELETE" }, { token, skipAuth: opts?.skipAuth }),
+      del: (
+        path: string,
+        body?: unknown,
+        opts?: { skipAuth?: boolean }
+      ) =>
+        apiRequest(
+          path,
+          {
+            method: "DELETE",
+            ...(body !== undefined ? { body } : {}),
+          } as RequestInit,
+          { token, skipAuth: opts?.skipAuth }
+        ),
 
       put: (path: string, body?: unknown, opts?: { skipAuth?: boolean }) =>
         apiRequest(

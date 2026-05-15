@@ -40,7 +40,7 @@ export function parseJobDate(iso: string | undefined): Date | null {
 }
 
 /**
- * e.g. "May 12, 2026 at 12:19 AM EEST" — local timezone, English month names.
+ * e.g. "May 12, 2026 at 12:19 AM" — no timezone suffix (GMT+3, EST, etc.).
  */
 export function formatJobDateTimeLong(iso: string | undefined): string | null {
   const d = parseJobDate(iso)
@@ -52,15 +52,13 @@ export function formatJobDateTimeLong(iso: string | undefined): string | null {
     year: "numeric",
   }).format(d)
 
-  const timeTz = new Intl.DateTimeFormat("en-US", {
+  const timePart = new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
-    timeZoneName: "short",
   }).format(d)
 
-  const timeTzClean = timeTz.replace(", ", " ")
-  return `${datePart} at ${timeTzClean}`
+  return `${datePart} at ${timePart}`
 }
 
 /**

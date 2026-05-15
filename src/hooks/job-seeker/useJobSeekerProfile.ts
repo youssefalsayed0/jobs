@@ -8,7 +8,7 @@ import { flattenApiUserPayload } from "@/lib/flatten-user-api-payload"
 export type JobSeekerProfilePayload = Record<string, unknown> | null
 
 export function useJobSeekerProfile() {
-  const { request, patchForm } = useApi()
+  const { request, patchForm, del } = useApi()
   const [profile, setProfile] = useState<JobSeekerProfilePayload>(null)
   const [loading, setLoading] = useState(true)
 
@@ -73,5 +73,13 @@ export function useJobSeekerProfile() {
     [patchForm, refetch]
   )
 
-  return { profile, loading, refetch, saveProfile }
+  const deleteAccount = useCallback(
+    async (password: string) => {
+      await del("/api/profile", { password })
+      setProfile(null)
+    },
+    [del]
+  )
+
+  return { profile, loading, refetch, saveProfile, deleteAccount }
 }

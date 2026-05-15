@@ -1,4 +1,8 @@
 import { parseApprovedDisabilityFromApi } from "@/lib/job-approved-disability"
+import {
+  parseJobSkillsFromApi,
+  readJobCategoryFromApi,
+} from "@/lib/job-posting-skills"
 import type {
   CompanyJobPosting,
   JobApplicationRow,
@@ -96,6 +100,8 @@ export function parseJobPosting(row: unknown): CompanyJobPosting | null {
       typeof o.qualification === "string" ? o.qualification : undefined,
     location: typeof o.location === "string" ? o.location : undefined,
     type: typeof o.type === "string" ? o.type : undefined,
+    category: readJobCategoryFromApi(o.category),
+    skills: parseJobSkillsFromApi(o.skills),
     approved_disability: parseApprovedDisabilityFromApi(o.approved_disability),
     created_at:
       typeof o.created_at === "string" ? o.created_at : undefined,

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { RequiredMark } from "@/components/ui/required-mark";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Spinner } from "@/components/ui/spinner";
@@ -17,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SkillsTagsInput } from "@/components/job-seeker/SkillsTagsInput";
 import { useAuth } from "@/contexts/auth-context";
+import { DeleteAccountSection } from "@/components/profile/DeleteAccountSection";
 import { useJobSeekerProfile } from "@/hooks/job-seeker/useJobSeekerProfile";
 import { JOB_SEEKER_DISABILITY_CUSTOM, JOB_SEEKER_DISABILITY_OPTIONS } from "@/lib/disability-types";
 import { capSkillsTokens, joinSkillsTokens, MAX_SKILLS_TAGS, parseSkillsTokens } from "@/lib/skills-tags";
@@ -64,7 +66,9 @@ const profileSchema = z
 	.object({
 		full_name: z.string().min(1, "Name is required"),
 		email: z.string().min(1, "Email is required").email("Enter a valid email address"),
-		phone: z.string().optional(),
+		phone: z.string().refine((s) => s.trim().length >= 1, {
+			message: "Phone number is required",
+		}),
 		gender: z
 			.string()
 			.optional()
@@ -422,7 +426,7 @@ function ProfilePageSkeleton() {
 
 export function JobSeekerProfilePage() {
 	const { user, refreshUser } = useAuth();
-	const { profile, loading, saveProfile } = useJobSeekerProfile();
+	const { profile, loading, saveProfile, deleteAccount } = useJobSeekerProfile();
 	const [pendingCv, setPendingCv] = useState(false);
 	const [pendingPhoto, setPendingPhoto] = useState(false);
 	const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
@@ -576,7 +580,7 @@ export function JobSeekerProfilePage() {
 						const fd = new FormData();
 						fd.append("full_name", values.full_name);
 						fd.append("email", values.email.trim());
-						if (values.phone?.trim()) fd.append("phone", values.phone.trim());
+						fd.append("phone", values.phone.trim());
 						if (values.gender === "male" || values.gender === "female") {
 							fd.append("gender", values.gender);
 						}
@@ -648,7 +652,10 @@ export function JobSeekerProfilePage() {
 									control={form.control}
 									render={({ field, fieldState }) => (
 										<Field data-invalid={fieldState.invalid}>
-											<FieldLabel htmlFor="profile-name">Full name</FieldLabel>
+											<FieldLabel htmlFor="profile-name">
+												Full name
+												<RequiredMark />
+											</FieldLabel>
 											<FieldContent>
 												<Input id="profile-name" className="h-11 rounded-xl border-border/80" autoComplete="name" {...field} />
 												<FieldDescription>Use the name you want on applications and emails.</FieldDescription>
@@ -662,7 +669,10 @@ export function JobSeekerProfilePage() {
 									control={form.control}
 									render={({ field, fieldState }) => (
 										<Field data-invalid={fieldState.invalid}>
-											<FieldLabel htmlFor="profile-email">Email</FieldLabel>
+											<FieldLabel htmlFor="profile-email">
+												Email
+												<RequiredMark />
+											</FieldLabel>
 											<FieldContent>
 												<Input id="profile-email" type="email" className="h-11 rounded-xl border-border/80" autoComplete="email" inputMode="email" {...field} />
 												<FieldDescription>Used for sign-in. Save to apply changes.</FieldDescription>
@@ -676,7 +686,10 @@ export function JobSeekerProfilePage() {
 									control={form.control}
 									render={({ field, fieldState }) => (
 										<Field data-invalid={fieldState.invalid}>
-											<FieldLabel htmlFor="profile-phone">Phone</FieldLabel>
+											<FieldLabel htmlFor="profile-phone">
+												Phone
+												<RequiredMark />
+											</FieldLabel>
 											<FieldContent>
 												<Input id="profile-phone" type="tel" className="h-11 rounded-xl border-border/80" autoComplete="tel" {...field} />
 												<FieldDescription>Include country code if you apply internationally.</FieldDescription>
@@ -767,7 +780,10 @@ export function JobSeekerProfilePage() {
 										control={form.control}
 										render={({ field, fieldState }) => (
 											<Field data-invalid={fieldState.invalid}>
-												<FieldLabel htmlFor="profile-disability-custom">Describe disability type</FieldLabel>
+												<FieldLabel htmlFor="profile-disability-custom">
+													Describe disability type
+													<RequiredMark />
+												</FieldLabel>
 												<FieldContent>
 													<Input id="profile-disability-custom" className="h-11 rounded-xl border-border/80" placeholder="e.g. Low vision, wheelchair user…" {...field} />
 													{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -1221,6 +1237,12 @@ export function JobSeekerProfilePage() {
 							</Field>
 						</CardContent>
 					</Card>
+
+					<DeleteAccountSection
+						accountLabel="job seeker account"
+						onDelete={deleteAccount}
+						className="mb-2"
+					/>
 
 					<div
 						className={cn(

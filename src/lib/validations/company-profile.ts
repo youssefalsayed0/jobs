@@ -27,7 +27,9 @@ export const companyProfileSchema = z.object({
   x_url: optionalHttpUrl(),
   linkedin_url: optionalHttpUrl(),
   instagram_url: optionalHttpUrl(),
-  phone: z.string().optional(),
+  phone: z.string().refine((s) => s.trim().length >= 1, {
+    message: "Phone number is required",
+  }),
   street: z.string().optional(),
   city: z.string().optional(),
   clear_profile_photo: z.boolean(),

@@ -8,7 +8,7 @@ import { flattenApiUserPayload } from "@/lib/flatten-user-api-payload"
 export type CompanyProfilePayload = Record<string, unknown> | null
 
 export function useCompanyUserProfile() {
-  const { request, patchForm } = useApi()
+  const { request, patchForm, del } = useApi()
   const [profile, setProfile] = useState<CompanyProfilePayload>(null)
   const [loading, setLoading] = useState(true)
 
@@ -72,5 +72,13 @@ export function useCompanyUserProfile() {
     [patchForm, refetch]
   )
 
-  return { profile, loading, refetch, saveProfile }
+  const deleteAccount = useCallback(
+    async (password: string) => {
+      await del("/api/company/profile", { password })
+      setProfile(null)
+    },
+    [del]
+  )
+
+  return { profile, loading, refetch, saveProfile, deleteAccount }
 }
